@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
-
+using System.Threading;
+using System.Threading.Tasks;
 using Antlr.Runtime;
 using Antlr.Runtime.Tree;
 
@@ -11,6 +13,7 @@ namespace MathLang
 {
     public class Program
     {
+
         // "культуронезависимый" формат для чисел (с разделителем точкой)
         public static readonly NumberFormatInfo NFI = new NumberFormatInfo();
 
@@ -21,6 +24,7 @@ namespace MathLang
             {
                 // в зависимости от наличия параметров командной строки разбираем
                 // либо файл с именем, переданным первым параметром, либо стандартный ввод
+
                 ICharStream input = args.Length == 1 ? (ICharStream)new ANTLRFileStream(args[0])
                                                      : (ICharStream)new ANTLRReaderStream(Console.In);
                 MathLangLexer lexer = new MathLangLexer(input);
@@ -31,6 +35,7 @@ namespace MathLang
                 Console.WriteLine();
                 Transpiler trans = new Transpiler(program);
                 Console.WriteLine(trans.Transpile());
+
                 //MathLangIntepreter.Execute(program);
             }
             catch (Exception e)

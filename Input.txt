@@ -1,5 +1,4 @@
-A = 68;
-input B;
-print A;
-A = B;
-print A;
+B = 65;
+print B;
+B = 1 + B;
+print B;
