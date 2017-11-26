@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,9 +24,11 @@ namespace BrainfuckTranspiler
         /// </summary>
         private int _varPtr;
 
-        // |v|a|r|i|a|b|l|e|s|D|A|
+        // |v|a|r|i|a|b|l|e|s|D|S|A|B
         // D - Duplicator
+        // S - Summator/Substractor
         // A - Accumulator
+        // B - Base
 
 
         private int _innerPtr;
@@ -33,8 +36,9 @@ namespace BrainfuckTranspiler
         /// Начало секции удвоения
         /// </summary>
         private int _duplicatorPtr;
+        private int _summatorPtr;
         private int _accumulatorPtr;
-        private int _duplicatorBasePtr;
+        private int _basePtr;
 
         private int Ptr
         {
@@ -66,8 +70,10 @@ namespace BrainfuckTranspiler
         {
             for (int i = 0; i < _blockNode.ChildCount; i++)
                 FindVars(_blockNode.GetChild(i));
-            _accumulatorPtr++;
-            _duplicatorBasePtr = _accumulatorPtr + 1;
+            _summatorPtr = _duplicatorPtr + 1;          // S после D
+            _accumulatorPtr = _summatorPtr + 1;         // A после S
+            _basePtr = _accumulatorPtr + 1;
+
             //На этом моменте сформирована таблица переменных изначальных
             for (int i = 0; i < _blockNode.ChildCount; i++)
                 ParseOperation(_blockNode.GetChild(i));
@@ -90,7 +96,6 @@ namespace BrainfuckTranspiler
             {
                 _varTable.Add(node.Text, _varPtr++);
                 _duplicatorPtr++;
-                _accumulatorPtr++;
             }
         }
 
@@ -138,12 +143,12 @@ namespace BrainfuckTranspiler
             AstNode var1 = node.GetChild(0);
             AstNode var2 = node.GetChild(1);
             
-            Clear(_varTable[var1.Text]);
-
             int.TryParse(var2.Text, out int value);
+            if(value < 0)
+                throw new ArgumentException();
 
-            for (int i = 0; i < value; i++)
-                _code.Append('+');
+            LoadValueToAccumulator(value);
+            Move(_accumulatorPtr, _varTable[var1.Text], '+');
         }
 
         private void ProcessVariableEquality(AstNode node)
@@ -154,7 +159,7 @@ namespace BrainfuckTranspiler
             if (_reserved.Contains(var2.Text))
             {
                 ProcessPrimitiveOperation(var2);
-                Copy(_accumulatorPtr, _varTable[var1.Text]);
+                Move(_summatorPtr, _varTable[var1.Text], '+');
             }
             else
                 Copy(_varTable[var2.Text], _varTable[var1.Text]);
@@ -182,97 +187,124 @@ namespace BrainfuckTranspiler
         // + - * /
         private void ProcessPrimitiveOperation(AstNode node)
         {
+            
+            Action<char> act;
             switch (node.Text)
             {
                 case "+":
                 case "-":
-                    ProcessZeroPowerMath(node, node.Text[0]);
+                    act = Sum;
                     break;
                 case "*":
                 case "/":
-
+                    act = Mult;
                     break;
+                    default:
+                        act = c => throw new ArgumentException();
+                        break;
             }
-        }
 
-        private void ProcessZeroPowerMath(AstNode node, char sign)
-        {
+
             AstNode varNode = node.GetChild(0);
             AstNode valueNode = node.GetChild(1);
+            bool varIsOp = _reserved.Contains(varNode.Text);
+            bool valueIsOp = _reserved.Contains(valueNode.Text);
+            if (varIsOp)
+                ProcessPrimitiveOperation(varNode);
+            if (valueIsOp)
+                ProcessPrimitiveOperation(valueNode);
             bool varIsVar = !int.TryParse(varNode.Text, out int var);
             bool valueIsValue = int.TryParse(valueNode.Text, out int value);
 
 
-            // Сначала рассмотрим случаи, когда V + 10 или 10 + V - сначала копируем значение в А, потом добавляем туда число
-           /* if ((varIsVar && valueIsValue) || (!varIsVar && !valueIsValue))
-            {
-                string nodeText;
-                int realValue;
-                if (varIsVar)
-                {
-                    nodeText = varNode.Text;
-                    realValue = value;
-                }
-                else
-                {
-                    nodeText = valueNode.Text;
-                    realValue = var;
-                }
-                // Теперь работаем с настоящими значениями
-                
-                Copy(_varTable[nodeText], _accumulatorPtr);             // Скопировали значение в регистр A
-                // Есть копия значения ячейки
-                Goto(_accumulatorPtr);                                  // Перевели указатель на регистр A
-
-                ZeroPowerMath(realValue, '+');
-            }*/
-
             // V + 10 или V - 10
+            // V * 10 или V / 10
             if (varIsVar && valueIsValue)
             {
-                Copy(_varTable[varNode.Text], _accumulatorPtr);             // Скопировали значение в регистр A
-                // Есть копия значения ячейки
-                Goto(_accumulatorPtr);                                      // Перевели указатель на регистр A
-                ZeroPowerMath(value, sign);
+                LoadVariableToAccumulator(varIsOp ? _summatorPtr : _varTable[varNode.Text]);
+                LoadValueToBase(value);               // Загрузили число в регистр В
+                act(node.Text[0]);
                 return;
             }
 
             // 10 + V или 10 - V
             if (!varIsVar && !valueIsValue)
             {
-                Clear(_accumulatorPtr);
-                ZeroPowerMath(var, sign);                           // Затолкали в А значение первого узла
-                Copy(_varTable[valueNode.Text], _duplicatorPtr);    // Скопировади в D значение второго
-                Move(_duplicatorPtr, _accumulatorPtr, sign);        // Добавили или вычли значение
+                LoadValueToAccumulator(var);               // Загрузили число в регистр В
+                LoadVariableToBase(_varTable[valueNode.Text]);
+                act(node.Text[0]);
                 return;
             }
 
             // Если 10 + 10 или 10 - 10, то легче всего
+            // Если 10 * 10 или 10 / 10
             if (!varIsVar && valueIsValue)
             {
-                Clear(_accumulatorPtr);         // На регистре А
-                ZeroPowerMath(var, '+');
-                ZeroPowerMath(value, sign);
+                LoadValueToBase(var);
+                LoadValueToAccumulator(value);
+                act(node.Text[0]);
                 return;
             }
 
             // Если V + В или V - B
+            // Если V * В или V / B
             if (varIsVar && !valueIsValue)
             {
-                Copy(_varTable[varNode.Text], _duplicatorPtr);
-                Copy(_varTable[valueNode.Text], _accumulatorPtr);
-                Move(_duplicatorPtr, _accumulatorPtr, sign, false);           // Перенос в неочищающем режиме
+                LoadVariableToAccumulator(_varTable[varNode.Text]);
+                LoadVariableToBase(_varTable[valueNode.Text]);
+
+                act(node.Text[0]);
+
                 return;
             }
-
+            
             throw new Exception("Какая-то невероятная ошибка");
         }
+        
 
+        /// <summary>
+        /// Выполняет операцию суммирования. Сначала загружает А в S, потом складывает или вычитает В с S
+        /// </summary>
+        /// <param name="sign">Знак операции.</param>
+        private void Sum(char sign)
+        {
+            Move(_accumulatorPtr, _summatorPtr, '+');
+            Move(_basePtr, _summatorPtr, sign, false);
+        }
+
+        private void Mult(char sign)
+        {
+            if(sign == '/')
+                throw new NotImplementedException();
+
+            Goto(_basePtr);
+            _code.Append('[');
+            Goto(_accumulatorPtr);
+            _code.Append('[');
+            Goto(_summatorPtr);
+            _code.Append('+');
+            Goto(_duplicatorPtr);
+            _code.Append('+');
+            Goto(_accumulatorPtr);
+            _code.Append("-]");
+            Goto(_duplicatorPtr);
+            _code.Append('[');
+            Goto(_accumulatorPtr);
+            _code.Append('+');
+            Goto(_duplicatorPtr);
+            _code.Append("-]");
+            Goto(_basePtr);
+            _code.Append("-]");
+        }
+
+        
         /// <summary>
         /// Переносим значение из регистра D в нужную ячейку.
         /// </summary>
         /// <param name="from">Откуда переносим.</param>
         /// <param name="to">Куда переносим.</param>
+        /// <param name="sign">Знак операции переноса.</param>
+        /// <param name="clearing">Нужно ли очистить ячейку назначения.</param>
         private void Move(int from, int to, char sign, bool clearing = true)
         {
             if(clearing)
@@ -284,20 +316,11 @@ namespace BrainfuckTranspiler
             _code.Append(sign);
             Goto(from);
             _code.Append("-]");
-
         }
 
         private void Copy(int from, int to)
         {
             Move(from, _duplicatorPtr, '+');      // Перенесли значение в регистр D, указатель на from
-
-            bool copyingToD = to == _duplicatorPtr;
-
-            if (copyingToD)
-            {
-                Goto(_duplicatorBasePtr);   // Очищаем регистр Р
-                _code.Append("[-]");
-            }
 
             Goto(_duplicatorPtr);      // Указатель на регистре D
             _code.Append('[');              
@@ -305,16 +328,11 @@ namespace BrainfuckTranspiler
             Goto(from);                // Возвращаем значение туда, откуда взяли
             _code.Append('+');
 
-            Goto(copyingToD ? _duplicatorBasePtr : to);     // Заодно переносим в нужное место
+            Goto(to);     // Заодно переносим в нужное место
             _code.Append('+');
 
             Goto(_duplicatorPtr);
             _code.Append("-]");
-
-            if (copyingToD)
-            {
-                Move(_duplicatorBasePtr, _duplicatorPtr, '+');
-            }
         }
 
 
@@ -331,21 +349,45 @@ namespace BrainfuckTranspiler
                 Ptr--;
         }
 
-
+        /// <summary>
+        /// Очищает ячейку по указателю.
+        /// </summary>
+        /// <param name="where">Указатель на ячейку.</param>
         private void Clear(int where)
         {
             Goto(where);
             _code.Append("[-]");
         }
+        
 
-        private void ZeroPowerMath(int amount, char symbol)
+        private void LoadValueToAccumulator(int amount)
         {
+            Clear(_accumulatorPtr);
             for (int i = 0; i < amount; i++)
             {
-                _code.Append(symbol);
+                _code.Append('+');
             }
         }
 
+        private void LoadValueToBase(int amount)
+        {
+            Clear(_basePtr);
+            for (int i = 0; i < amount; i++)
+            {
+                _code.Append('+');
+            }
+        }
 
+        private void LoadVariableToBase(int pointer)
+        {
+            Clear(_basePtr);
+            Copy(pointer, _basePtr);
+        }
+
+        private void LoadVariableToAccumulator(int pointer)
+        {
+            Clear(_accumulatorPtr);
+            Copy(pointer, _accumulatorPtr);
+        }
     }
 }
