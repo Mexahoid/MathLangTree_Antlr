@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 
 using AstNode = Antlr.Runtime.Tree.ITree;
@@ -19,10 +20,13 @@ namespace BrainfuckTranspiler
                 if (!_varTable.ContainsKey(var2.Text) && !_reserved.Contains(var2.Text))
                     throw new Exception("Присваиваемая переменная отсутствует.");
 
-            if (isVariable)
-                ProcessVariableEquality(node);
-            else
-                ProcessIntegerEquality(node);
+            //if (isVariable)
+            {
+                // ProcessVariableEquality(node);
+                ProcessQueueableEquality(node);
+            }
+            //else
+                //ProcessIntegerEquality(node);
         }
 
         private void ProcessIntegerEquality(AstNode node)
@@ -30,11 +34,7 @@ namespace BrainfuckTranspiler
             AstNode var1 = node.GetChild(0);
             AstNode var2 = node.GetChild(1);
 
-            int.TryParse(var2.Text, out int value);
-            if (value < 0)
-                throw new ArgumentException();
-
-            LoadValueToAccumulator(value);
+            LoadToAccumulator(var2.Text);
             Move(_accumulatorPtr, _varTable[var1.Text], '+');
         }
 
@@ -50,6 +50,65 @@ namespace BrainfuckTranspiler
             }
             else
                 Copy(_varTable[var2.Text], _varTable[var1.Text]);
+        }
+
+
+        private void ProcessQueueableEquality(AstNode node)
+        {
+            AstNode var1 = node.GetChild(0);
+            AstNode var2 = node.GetChild(1);
+            //if (_reserved.Contains(var2.Text)) // *+-/
+            {
+                InitQueue(var2);
+            }
+            ProcessQueue();
+            Copy(_accumulatorPtr, _varTable[var1.Text]);
+        }
+
+        private void InitQueue(AstNode node)
+        {
+            if (node.GetChild(0) != null && node.GetChild(1) != null)
+            {
+                InitQueue(node.GetChild(0));
+                InitQueue(node.GetChild(1));
+            }
+            _operationsQueue.Enqueue(node);
+        }
+
+        private void ProcessQueue()
+        {
+            bool acc = false;
+            Action<char> act;
+
+            while (_operationsQueue.Count > 0)
+            {
+                if (!acc)
+                {
+                    LoadToAccumulator(_operationsQueue.Dequeue().Text);
+                    acc = true;
+                }
+                if (_operationsQueue.Count == 0)
+                    return;
+                LoadToBase(_operationsQueue.Dequeue().Text);
+                
+
+                switch (_operationsQueue.Peek().Text)
+                {
+                    case "+":
+                    case "-":
+                        act = Sum;
+                        break;
+                    case "*":
+                    case "/":
+                        act = Mult;
+                        break;
+                    default:
+                        act = c => throw new ArgumentException();
+                        break;
+                }
+                act(_operationsQueue.Dequeue().Text[0]);
+                Move(_summatorPtr, _accumulatorPtr, '+');
+            }
         }
 
 
@@ -94,58 +153,10 @@ namespace BrainfuckTranspiler
 
             AstNode varNode = node.GetChild(0);
             AstNode valueNode = node.GetChild(1);
-            bool varIsOp = _reserved.Contains(varNode.Text);
-            bool valueIsOp = _reserved.Contains(valueNode.Text);
-            if (varIsOp)
-                ProcessPrimitiveOperation(varNode);
-            if (valueIsOp)
-                ProcessPrimitiveOperation(valueNode);
-            bool varIsVar = !int.TryParse(varNode.Text, out int var);
-            bool valueIsValue = int.TryParse(valueNode.Text, out int value);
 
-
-            // V + 10 или V - 10
-            // V * 10 или V / 10
-            if (varIsVar && valueIsValue)
-            {
-                LoadVariableToAccumulator(varIsOp ? _summatorPtr : _varTable[varNode.Text]);
-                LoadValueToBase(value); // Загрузили число в регистр В
-                act(node.Text[0]);
-                return;
-            }
-
-            // 10 + V или 10 - V
-            if (!varIsVar && !valueIsValue)
-            {
-                LoadValueToAccumulator(var); // Загрузили число в регистр В
-                LoadVariableToBase(_varTable[valueNode.Text]);
-                act(node.Text[0]);
-                return;
-            }
-
-            // Если 10 + 10 или 10 - 10, то легче всего
-            // Если 10 * 10 или 10 / 10
-            if (!varIsVar && valueIsValue)
-            {
-                LoadValueToBase(var);
-                LoadValueToAccumulator(value);
-                act(node.Text[0]);
-                return;
-            }
-
-            // Если V + В или V - B
-            // Если V * В или V / B
-            if (varIsVar && !valueIsValue)
-            {
-                LoadVariableToAccumulator(_varTable[varNode.Text]);
-                LoadVariableToBase(_varTable[valueNode.Text]);
-
-                act(node.Text[0]);
-
-                return;
-            }
-
-            throw new Exception("Какая-то невероятная ошибка");
+            LoadToAccumulator(varNode.Text);
+            LoadToBase(valueNode.Text);
+            act(node.Text[0]);
         }
     }
 }

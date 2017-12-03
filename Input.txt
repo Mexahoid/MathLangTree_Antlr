@@ -2,3 +2,7 @@ A = 11;
 B = 6;
 C = A * B;
 print C;
+D = (1 + 2) * 3 + 59;
+print D;
+E = 2 * 3 + 4 * 7 + 5;
+print E;

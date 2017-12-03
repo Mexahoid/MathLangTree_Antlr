@@ -103,36 +103,43 @@ namespace BrainfuckTranspiler
             Goto(where);
             _code.Append("[-]");
         }
+        
 
 
-        private void LoadValueToAccumulator(int amount)
+        private void LoadToAccumulator(string text)
         {
             Clear(_accumulatorPtr);
-            for (int i = 0; i < amount; i++)
+            if (_varTable.ContainsKey(text))
             {
-                _code.Append('+');
+                Copy(_varTable[text], _accumulatorPtr);
+            }
+            else
+            {
+                int amount = int.Parse(text);
+                for (int i = 0; i < amount; i++)
+                    _code.Append('+');
             }
         }
 
-        private void LoadValueToBase(int amount)
+        private void LoadToBase(string text)
         {
             Clear(_basePtr);
-            for (int i = 0; i < amount; i++)
+            if (_varTable.ContainsKey(text))
             {
-                _code.Append('+');
+                Copy(_varTable[text], _basePtr);
             }
+            else
+            {
+                int amount = int.Parse(text);
+                if(amount < 0)
+                    throw new ArgumentException();
+                for (int i = 0; i < amount; i++)
+                {
+                    _code.Append('+');
+                }
+            }
+
         }
 
-        private void LoadVariableToBase(int pointer)
-        {
-            Clear(_basePtr);
-            Copy(pointer, _basePtr);
-        }
-
-        private void LoadVariableToAccumulator(int pointer)
-        {
-            Clear(_accumulatorPtr);
-            Copy(pointer, _accumulatorPtr);
-        }
     }
 }

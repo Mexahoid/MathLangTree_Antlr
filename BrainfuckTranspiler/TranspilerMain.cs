@@ -19,6 +19,8 @@ namespace BrainfuckTranspiler
 
         private readonly StringBuilder _code;
 
+        private readonly Queue<AstNode> _operationsQueue;
+
         /// <summary>
         /// Указывает на последний индекс, принадлежащий переменной
         /// </summary>
@@ -39,6 +41,7 @@ namespace BrainfuckTranspiler
         private int _summatorPtr;
         private int _accumulatorPtr;
         private int _basePtr;
+        private int _stackPtr;
 
         private int Ptr
         {
@@ -63,6 +66,7 @@ namespace BrainfuckTranspiler
             _varTable = new Dictionary<string, int>();
             _reserved = new List<string> { "BLOCK", "=", "input", "print", "-", "+", "*", "/" };
             _code = new StringBuilder();
+            _operationsQueue = new Queue<AstNode>();
         }
 
 
@@ -73,6 +77,7 @@ namespace BrainfuckTranspiler
             _summatorPtr = _duplicatorPtr + 1;          // S после D
             _accumulatorPtr = _summatorPtr + 1;         // A после S
             _basePtr = _accumulatorPtr + 1;
+            _stackPtr = _basePtr + 1;
 
             //На этом моменте сформирована таблица переменных изначальных
             for (int i = 0; i < _blockNode.ChildCount; i++)
