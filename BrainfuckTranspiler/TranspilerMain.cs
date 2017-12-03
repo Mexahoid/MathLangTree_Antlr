@@ -1,0 +1,126 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+using Antlr.Runtime.Tree;
+
+using AstNode = Antlr.Runtime.Tree.ITree;
+
+namespace BrainfuckTranspiler
+{
+    public partial class Transpiler
+    {
+        private readonly AstNode _blockNode;
+        private readonly IDictionary<string, int> _varTable;
+        private readonly IList<string> _reserved;
+
+        private readonly StringBuilder _code;
+
+        /// <summary>
+        /// Указывает на последний индекс, принадлежащий переменной
+        /// </summary>
+        private int _varPtr;
+
+        // |v|a|r|i|a|b|l|e|s|D|S|A|B
+        // D - Duplicator
+        // S - Summator/Substractor
+        // A - Accumulator
+        // B - Base
+
+
+        private int _innerPtr;
+        /// <summary>
+        /// Начало секции удвоения
+        /// </summary>
+        private int _duplicatorPtr;
+        private int _summatorPtr;
+        private int _accumulatorPtr;
+        private int _basePtr;
+
+        private int Ptr
+        {
+            get => _innerPtr;
+            set
+            {
+                if (value > _innerPtr)
+                    for (int i = 0; i < value - _innerPtr; i++)
+                        _code.Append('>');
+                else if (value < _innerPtr)
+                    for (int i = 0; i < _innerPtr - value; i++)
+                        _code.Append('<');
+                _innerPtr = value;
+            }
+        }
+
+
+
+        public Transpiler(AstNode node)
+        {
+            _blockNode = node;
+            _varTable = new Dictionary<string, int>();
+            _reserved = new List<string> { "BLOCK", "=", "input", "print", "-", "+", "*", "/" };
+            _code = new StringBuilder();
+        }
+
+
+        public string Transpile()
+        {
+            for (int i = 0; i < _blockNode.ChildCount; i++)
+                FindVars(_blockNode.GetChild(i));
+            _summatorPtr = _duplicatorPtr + 1;          // S после D
+            _accumulatorPtr = _summatorPtr + 1;         // A после S
+            _basePtr = _accumulatorPtr + 1;
+
+            //На этом моменте сформирована таблица переменных изначальных
+            for (int i = 0; i < _blockNode.ChildCount; i++)
+                ParseOperation(_blockNode.GetChild(i));
+
+            return _code.ToString();
+        }
+
+        private void FindVars(AstNode node)
+        {
+            if (_reserved.Contains(node.Text))
+            {
+                for (int i = 0; i < node.ChildCount; i++)
+                    FindVars(node.GetChild(i));
+                return;
+            }
+            if (int.TryParse(node.Text, out int value))
+                return;
+
+            if (!_varTable.ContainsKey(node.Text))
+            {
+                _varTable.Add(node.Text, _varPtr++);
+                _duplicatorPtr++;
+            }
+        }
+
+        private void ParseOperation(AstNode node)
+        {
+            switch (node.Text)
+            {
+                case "=":
+                    ProcessEquality(node);
+                    break;
+                case "print":
+                    ProcessPrint(node);
+                    break;
+                case "input":
+                    ProcessInput(node);
+                    break;
+                case "+":
+                case "-":
+                case "*":
+                case "/":
+                    ProcessPrimitiveOperation(node);
+                    break;
+            }
+        }
+
+
+    }
+}
