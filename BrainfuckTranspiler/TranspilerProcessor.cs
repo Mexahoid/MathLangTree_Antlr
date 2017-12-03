@@ -20,38 +20,8 @@ namespace BrainfuckTranspiler
                 if (!_varTable.ContainsKey(var2.Text) && !_reserved.Contains(var2.Text))
                     throw new Exception("Присваиваемая переменная отсутствует.");
 
-            //if (isVariable)
-            {
-                // ProcessVariableEquality(node);
-                ProcessQueueableEquality(node);
-            }
-            //else
-                //ProcessIntegerEquality(node);
+            ProcessQueueableEquality(node);
         }
-
-        private void ProcessIntegerEquality(AstNode node)
-        {
-            AstNode var1 = node.GetChild(0);
-            AstNode var2 = node.GetChild(1);
-
-            LoadToAccumulator(var2.Text);
-            Move(_accumulatorPtr, _varTable[var1.Text], '+');
-        }
-
-        private void ProcessVariableEquality(AstNode node)
-        {
-            AstNode var1 = node.GetChild(0);
-            AstNode var2 = node.GetChild(1);
-
-            if (_reserved.Contains(var2.Text))
-            {
-                ProcessPrimitiveOperation(var2);
-                Move(_summatorPtr, _varTable[var1.Text], '+');
-            }
-            else
-                Copy(_varTable[var2.Text], _varTable[var1.Text]);
-        }
-
 
         private void ProcessQueueableEquality(AstNode node)
         {
@@ -62,7 +32,7 @@ namespace BrainfuckTranspiler
                 InitQueue(var2);
             }
             ProcessQueue();
-            Copy(_accumulatorPtr, _varTable[var1.Text]);
+            GetFromCollector(_varTable[var1.Text]);
         }
 
         private void InitQueue(AstNode node)
@@ -82,39 +52,36 @@ namespace BrainfuckTranspiler
 
             while (_operationsQueue.Count > 0)
             {
-                if (!acc)
+                if (_reserved.Contains(_operationsQueue.Peek().Text))
                 {
-                    LoadToAccumulator(_operationsQueue.Dequeue().Text);
-                    acc = true;
+                    GetFromCollector(_accumulatorPtr);
+                    GetFromCollector(_basePtr);
+                    switch (_operationsQueue.Peek().Text)
+                    {
+                        case "+":
+                        case "-":
+                            act = Sum;
+                            break;
+                        case "*":
+                        case "/":
+                            act = Mult;
+                            break;
+                        default:
+                            act = c => throw new ArgumentException();
+                            break;
+                    }
+                    act(_operationsQueue.Dequeue().Text[0]);
+                    LoadToCollector(_summatorPtr);
                 }
-                if (_operationsQueue.Count == 0)
-                    return;
-                LoadToBase(_operationsQueue.Dequeue().Text);
-                
-
-                switch (_operationsQueue.Peek().Text)
-                {
-                    case "+":
-                    case "-":
-                        act = Sum;
-                        break;
-                    case "*":
-                    case "/":
-                        act = Mult;
-                        break;
-                    default:
-                        act = c => throw new ArgumentException();
-                        break;
-                }
-                act(_operationsQueue.Dequeue().Text[0]);
-                Move(_summatorPtr, _accumulatorPtr, '+');
+                else
+                    LoadToCollector(_operationsQueue.Dequeue().Text);
             }
         }
 
 
         private void ProcessPrint(AstNode node)
         {
-            if (!node.Text.Equals("print"))
+            if (node.Text != "print")
                 return;
             AstNode var = node.GetChild(0);
             Goto(_varTable[var.Text]);
@@ -123,40 +90,11 @@ namespace BrainfuckTranspiler
 
         private void ProcessInput(AstNode node)
         {
-            if (!node.Text.Equals("input"))
+            if (node.Text != "input")
                 return;
             AstNode var = node.GetChild(0);
             Goto(_varTable[var.Text]);
             _code.Append(',');
-        }
-
-        // + - * /
-        private void ProcessPrimitiveOperation(AstNode node)
-        {
-
-            Action<char> act;
-            switch (node.Text)
-            {
-                case "+":
-                case "-":
-                    act = Sum;
-                    break;
-                case "*":
-                case "/":
-                    act = Mult;
-                    break;
-                default:
-                    act = c => throw new ArgumentException();
-                    break;
-            }
-
-
-            AstNode varNode = node.GetChild(0);
-            AstNode valueNode = node.GetChild(1);
-
-            LoadToAccumulator(varNode.Text);
-            LoadToBase(valueNode.Text);
-            act(node.Text[0]);
         }
     }
 }

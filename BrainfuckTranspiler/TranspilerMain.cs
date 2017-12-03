@@ -26,12 +26,12 @@ namespace BrainfuckTranspiler
         /// </summary>
         private int _varPtr;
 
-        // |v|a|r|i|a|b|l|e|s|D|S|A|B
+        // |v|a|r|i|a|b|l|e|s|D|S|A|B|C1|C2|..|CN|
         // D - Duplicator
         // S - Summator/Substractor
         // A - Accumulator
         // B - Base
-
+        // CN - Collector
 
         private int _innerPtr;
         /// <summary>
@@ -41,7 +41,8 @@ namespace BrainfuckTranspiler
         private int _summatorPtr;
         private int _accumulatorPtr;
         private int _basePtr;
-        private int _stackPtr;
+        private int _collectorPtr;
+        private int _collectorSize;
 
         private int Ptr
         {
@@ -77,7 +78,8 @@ namespace BrainfuckTranspiler
             _summatorPtr = _duplicatorPtr + 1;          // S после D
             _accumulatorPtr = _summatorPtr + 1;         // A после S
             _basePtr = _accumulatorPtr + 1;
-            _stackPtr = _basePtr + 1;
+            _collectorPtr = _basePtr + 1;
+            _collectorSize = 0;
 
             //На этом моменте сформирована таблица переменных изначальных
             for (int i = 0; i < _blockNode.ChildCount; i++)
@@ -116,12 +118,6 @@ namespace BrainfuckTranspiler
                     break;
                 case "input":
                     ProcessInput(node);
-                    break;
-                case "+":
-                case "-":
-                case "*":
-                case "/":
-                    ProcessPrimitiveOperation(node);
                     break;
             }
         }

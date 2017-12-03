@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace BrainfuckTranspiler
 {
@@ -13,8 +10,8 @@ namespace BrainfuckTranspiler
         /// <param name="sign">Знак операции.</param>
         private void Sum(char sign)
         {
-            Move(_accumulatorPtr, _summatorPtr, '+');
-            Move(_basePtr, _summatorPtr, sign, false);
+            Move(_basePtr, _summatorPtr, '+');
+            Move(_accumulatorPtr, _summatorPtr, sign, false);
         }
 
         private void Mult(char sign)
@@ -131,8 +128,6 @@ namespace BrainfuckTranspiler
             else
             {
                 int amount = int.Parse(text);
-                if(amount < 0)
-                    throw new ArgumentException();
                 for (int i = 0; i < amount; i++)
                 {
                     _code.Append('+');
@@ -141,5 +136,33 @@ namespace BrainfuckTranspiler
 
         }
 
+        private void LoadToCollector(int from)
+        {
+            Move(from, _collectorPtr++, '+');
+            _collectorSize++;
+        }
+        private void GetFromCollector(int where)
+        {
+            Move(--_collectorPtr, where, '+');
+            _collectorSize--;
+        }
+
+
+        private void LoadToCollector(string text)
+        {
+            if (_varTable.ContainsKey(text))
+            {
+                Copy(_varTable[text], _collectorPtr);
+            }
+            else
+            {
+                Goto(_collectorPtr);
+                int amount = int.Parse(text);
+                for (int i = 0; i < amount; i++)
+                    _code.Append('+');
+            }
+            _collectorPtr++;
+            _collectorSize++;
+        }
     }
 }
