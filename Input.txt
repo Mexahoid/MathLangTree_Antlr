@@ -1,18 +1,14 @@
-A = 14; 
-B = 5; 
-C = A * B; 
-print C; 
-D = (1 + 2) * 3 + 76; 
-print D; 
-E = 2 * 3 + 4 * 7 + 11 * 3; 
-print E; 
-A = 75; 
-print A; 
-B = 2 * 2 * 2* 2*2; 
-print B; 
-C = 10 * 9 - 1; 
-print C; 
-D = 16 * 5 - 1; 
-E = 85; 
-print D; 
-print E;
+A = 65; 
+B = 65;
+C = 67;
+
+if(A == B)
+{
+	print(A);
+	print(A);
+}
+else
+{
+	print(C);
+	print(A);
+}

@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
-using Antlr.Runtime.Tree;
 
 using AstNode = Antlr.Runtime.Tree.ITree;
 
@@ -26,11 +24,12 @@ namespace BrainfuckTranspiler
         /// </summary>
         private int _varPtr;
 
-        // |v|a|r|i|a|b|l|e|s|D|S|A|B|C1|C2|..|CN|
+        // |v|a|r|i|a|b|l|e|s|D|S|A|B|E|C1|C2|..|CN|
         // D - Duplicator
         // S - Summator/Substractor
         // A - Accumulator
         // B - Base
+        // E - Equator
         // CN - Collector
 
         private int _innerPtr;
@@ -41,6 +40,7 @@ namespace BrainfuckTranspiler
         private int _summatorPtr;
         private int _accumulatorPtr;
         private int _basePtr;
+        private int _equatorPtr;
         private int _collectorPtr;
         private int _collectorSize;
 
@@ -65,7 +65,7 @@ namespace BrainfuckTranspiler
         {
             _blockNode = node;
             _varTable = new Dictionary<string, int>();
-            _reserved = new List<string> { "BLOCK", "=", "input", "print", "-", "+", "*", "/" };
+            _reserved = new List<string> { "BLOCK", "=", "input", "print", "-", "+", "*", "/", "==", "<>", "if" };
             _code = new StringBuilder();
             _operationsQueue = new Queue<AstNode>();
         }
@@ -78,7 +78,8 @@ namespace BrainfuckTranspiler
             _summatorPtr = _duplicatorPtr + 1;          // S после D
             _accumulatorPtr = _summatorPtr + 1;         // A после S
             _basePtr = _accumulatorPtr + 1;
-            _collectorPtr = _basePtr + 1;
+            _equatorPtr = _basePtr + 1;
+            _collectorPtr = _equatorPtr + 1;
             _collectorSize = 0;
 
             //На этом моменте сформирована таблица переменных изначальных
@@ -118,6 +119,9 @@ namespace BrainfuckTranspiler
                     break;
                 case "input":
                     ProcessInput(node);
+                    break;
+                case "if":
+                    ProcessConditionalEquality(node);
                     break;
             }
         }

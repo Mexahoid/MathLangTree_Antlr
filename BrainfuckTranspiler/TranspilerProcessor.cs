@@ -96,5 +96,51 @@ namespace BrainfuckTranspiler
             Goto(_varTable[var.Text]);
             _code.Append(',');
         }
+
+        private void ProcessConditionalEquality(AstNode node)
+        {
+            var op = node.GetChild(0);
+            int blockTrueNum = 1, blockFalseNum = 2;
+            switch (op.Text)
+            {
+                case "==":
+                    blockTrueNum = 1;
+                    blockFalseNum = 2;
+                    break;
+                case "<>":
+                    blockTrueNum = 2;
+                    blockFalseNum = 1;
+                    break;
+            }
+
+            LoadToCollector(op.GetChild(0).Text);
+            LoadToCollector(op.GetChild(1).Text);
+
+            GetFromCollector(_basePtr);
+            GetFromCollector(_accumulatorPtr);
+
+            Sum('-');
+
+            Move(_summatorPtr, _equatorPtr, '+');   // Перенесли в эквотер
+            Goto(_equatorPtr);
+            _code.Append("+[-[");
+            Clear(_equatorPtr);
+            var blockTrue = node.GetChild(blockTrueNum);
+            for (int i = 0; i < blockTrue.ChildCount; i++)
+            {
+                ParseOperation(blockTrue.GetChild(i));
+            }
+            Clear(_equatorPtr);
+            _code.Append("]");
+            Goto(_equatorPtr);
+            _code.Append("+[");
+            var blockFalse = node.GetChild(blockFalseNum);
+            for (int i = 0; i < blockFalse.ChildCount; i++)
+            {
+                ParseOperation(blockFalse.GetChild(i));
+            }
+            Clear(_equatorPtr);
+            _code.Append("]]");
+        }
     }
 }

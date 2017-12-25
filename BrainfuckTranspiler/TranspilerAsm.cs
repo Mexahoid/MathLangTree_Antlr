@@ -38,8 +38,7 @@ namespace BrainfuckTranspiler
             Goto(_basePtr);
             _code.Append("-]");
         }
-
-
+        
         /// <summary>
         /// Переносим значение из регистра D в нужную ячейку.
         /// </summary>
@@ -76,8 +75,7 @@ namespace BrainfuckTranspiler
             Goto(_duplicatorPtr);
             _code.Append("-]");
         }
-
-
+        
         /// <summary>
         /// Переводит указатель на выбранную позицию.
         /// </summary>
@@ -99,41 +97,6 @@ namespace BrainfuckTranspiler
         {
             Goto(where);
             _code.Append("[-]");
-        }
-        
-
-
-        private void LoadToAccumulator(string text)
-        {
-            Clear(_accumulatorPtr);
-            if (_varTable.ContainsKey(text))
-            {
-                Copy(_varTable[text], _accumulatorPtr);
-            }
-            else
-            {
-                int amount = int.Parse(text);
-                for (int i = 0; i < amount; i++)
-                    _code.Append('+');
-            }
-        }
-
-        private void LoadToBase(string text)
-        {
-            Clear(_basePtr);
-            if (_varTable.ContainsKey(text))
-            {
-                Copy(_varTable[text], _basePtr);
-            }
-            else
-            {
-                int amount = int.Parse(text);
-                for (int i = 0; i < amount; i++)
-                {
-                    _code.Append('+');
-                }
-            }
-
         }
 
         private void LoadToCollector(int from)

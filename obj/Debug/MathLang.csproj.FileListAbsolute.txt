@@ -1,0 +1,40 @@
+I:\Теория компиляторов\Методичка\Samples\MathExprExtTree_Antlr\bin\Debug\MathLang.exe
+I:\Теория компиляторов\Методичка\Samples\MathExprExtTree_Antlr\bin\Debug\MathLang.pdb
+I:\Теория компиляторов\Методичка\Samples\MathExprExtTree_Antlr\bin\Debug\Antlr3.Runtime.dll
+I:\Теория компиляторов\Методичка\Samples\MathExprExtTree_Antlr\obj\Debug\MathLang.csprojResolveAssemblyReference.cache
+I:\Теория компиляторов\Методичка\Samples\MathExprExtTree_Antlr\obj\Debug\MathLang.exe
+I:\Теория компиляторов\Методичка\Samples\MathExprExtTree_Antlr\obj\Debug\MathLang.pdb
+F:\Теория компиляторов\Методичка\Samples\MathLangTree_Antlr\obj\Debug\MathLang.csprojResolveAssemblyReference.cache
+F:\Теория компиляторов\Методичка\Samples\MathLangTree_Antlr\obj\Debug\MathLang.exe
+F:\Теория компиляторов\Методичка\Samples\MathLangTree_Antlr\bin\Debug\MathLang.exe
+F:\Теория компиляторов\Методичка\Samples\MathLangTree_Antlr\bin\Debug\MathLang.pdb
+F:\Теория компиляторов\Методичка\Samples\MathLangTree_Antlr\bin\Debug\Antlr3.Runtime.dll
+F:\Теория компиляторов\Методичка\Samples\MathLangTree_Antlr\obj\Debug\MathLang.pdb
+L:\Лекции\3 Курс\Теория компиляторов\Samples\2\MathLangTree_Antlr\bin\Debug\MathLang.exe
+L:\Лекции\3 Курс\Теория компиляторов\Samples\2\MathLangTree_Antlr\bin\Debug\MathLang.pdb
+L:\Лекции\3 Курс\Теория компиляторов\Samples\2\MathLangTree_Antlr\bin\Debug\Antlr3.Runtime.dll
+L:\Лекции\3 Курс\Теория компиляторов\Samples\2\MathLangTree_Antlr\obj\Debug\ResolveAssemblyReference.cache
+L:\Лекции\3 Курс\Теория компиляторов\Samples\2\MathLangTree_Antlr\obj\Debug\MathLang.exe
+L:\Лекции\3 Курс\Теория компиляторов\Samples\2\MathLangTree_Antlr\obj\Debug\MathLang.pdb
+D:\Data\Projects\MathLangTree_Antlr\bin\Debug\MathLang.exe
+D:\Data\Projects\MathLangTree_Antlr\bin\Debug\MathLang.pdb
+D:\Data\Projects\MathLangTree_Antlr\bin\Debug\Antlr3.Runtime.dll
+D:\Data\Projects\MathLangTree_Antlr\obj\Debug\MathLang.exe
+D:\Data\Projects\MathLangTree_Antlr\obj\Debug\MathLang.csprojResolveAssemblyReference.cache
+D:\Data\Projects\MathLangTree_Antlr\obj\Debug\MathLang.csproj.CoreCompileInputs.cache
+D:\Projects\MathLangTree_Antlr\bin\Debug\MathLang.exe
+D:\Projects\MathLangTree_Antlr\bin\Debug\MathLang.pdb
+D:\Projects\MathLangTree_Antlr\bin\Debug\Antlr3.Runtime.dll
+D:\Projects\MathLangTree_Antlr\obj\Debug\MathLang.csprojResolveAssemblyReference.cache
+D:\Projects\MathLangTree_Antlr\obj\Debug\MathLang.csproj.CoreCompileInputs.cache
+D:\Projects\MathLangTree_Antlr\obj\Debug\MathLang.exe
+D:\Projects\MathLangTree_Antlr\obj\Debug\MathLang.pdb
+D:\Gits\MathLangTree_Antlr\bin\Debug\MathLang.exe
+D:\Gits\MathLangTree_Antlr\bin\Debug\MathLang.pdb
+D:\Gits\MathLangTree_Antlr\bin\Debug\Antlr3.Runtime.dll
+D:\Gits\MathLangTree_Antlr\bin\Debug\BrainfuckTranspiler.dll
+D:\Gits\MathLangTree_Antlr\bin\Debug\BrainfuckTranspiler.pdb
+D:\Gits\MathLangTree_Antlr\obj\Debug\MathLang.csprojResolveAssemblyReference.cache
+D:\Gits\MathLangTree_Antlr\obj\Debug\MathLang.csproj.CoreCompileInputs.cache
+D:\Gits\MathLangTree_Antlr\obj\Debug\MathLang.exe
+D:\Gits\MathLangTree_Antlr\obj\Debug\MathLang.pdb
