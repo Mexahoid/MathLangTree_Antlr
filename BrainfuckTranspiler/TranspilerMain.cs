@@ -24,12 +24,13 @@ namespace BrainfuckTranspiler
         /// </summary>
         private int _varPtr;
 
-        // |v|a|r|i|a|b|l|e|s|D|S|A|B|E|C1|C2|..|CN|
+        // |v|a|r|i|a|b|l|e|s|D|S|A|B|EM|EH|C1|C2|..|CN|
         // D - Duplicator
         // S - Summator/Substractor
         // A - Accumulator
         // B - Base
-        // E - Equator
+        // EM - Equator Main
+        // EH - Equator Helper
         // CN - Collector
 
         private int _innerPtr;
@@ -40,7 +41,8 @@ namespace BrainfuckTranspiler
         private int _summatorPtr;
         private int _accumulatorPtr;
         private int _basePtr;
-        private int _equatorPtr;
+        private int _equatorMainPtr;
+        private int _equatorHelperPtr;
         private int _collectorPtr;
         private int _collectorSize;
 
@@ -78,8 +80,9 @@ namespace BrainfuckTranspiler
             _summatorPtr = _duplicatorPtr + 1;          // S после D
             _accumulatorPtr = _summatorPtr + 1;         // A после S
             _basePtr = _accumulatorPtr + 1;
-            _equatorPtr = _basePtr + 1;
-            _collectorPtr = _equatorPtr + 1;
+            _equatorMainPtr = _basePtr + 1;
+            _equatorHelperPtr = _equatorMainPtr + 1;
+            _collectorPtr = _equatorHelperPtr + 1;
             _collectorSize = 0;
 
             //На этом моменте сформирована таблица переменных изначальных
