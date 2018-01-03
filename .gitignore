@@ -4,7 +4,7 @@
 
 /.vs/MathLang/v15/Server/sqlite3
 /.vs/MathLang/v15/sqlite3
-/.vs/MathLang/v15/
-*.vs/*
-*/bin/
-*/org/
+/.vs/MathLang/v15
+*.vs
+*/bin
+*/org
