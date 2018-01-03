@@ -103,11 +103,11 @@ namespace BrainfuckTranspiler
             if (int.TryParse(node.Text, out int value))
                 return;
 
-            if (!_varTable.ContainsKey(node.Text))
-            {
-                _varTable.Add(node.Text, _varPtr++);
-                _duplicatorPtr++;
-            }
+            if (_varTable.ContainsKey(node.Text))
+                return;
+
+            _varTable.Add(node.Text, _varPtr++);
+            _duplicatorPtr++;
         }
 
         private void ParseOperation(AstNode node)

@@ -6,3 +6,11 @@ D:\Gits\MathLangTree_Antlr\BrainfuckTranspiler\obj\Debug\BrainfuckTranspiler.csp
 D:\Gits\MathLangTree_Antlr\BrainfuckTranspiler\obj\Debug\BrainfuckTranspiler.csproj.CoreCompileInputs.cache
 D:\Gits\MathLangTree_Antlr\BrainfuckTranspiler\obj\Debug\BrainfuckTranspiler.dll
 D:\Gits\MathLangTree_Antlr\BrainfuckTranspiler\obj\Debug\BrainfuckTranspiler.pdb
+D:\Data\Projects\MathLangTree_Antlr\BrainfuckTranspiler\bin\Debug\BrainfuckTranspiler.dll
+D:\Data\Projects\MathLangTree_Antlr\BrainfuckTranspiler\bin\Debug\BrainfuckTranspiler.pdb
+D:\Data\Projects\MathLangTree_Antlr\BrainfuckTranspiler\bin\Debug\Antlr3.Runtime.dll
+D:\Data\Projects\MathLangTree_Antlr\BrainfuckTranspiler\bin\Debug\Antlr3.Runtime.xml
+D:\Data\Projects\MathLangTree_Antlr\BrainfuckTranspiler\obj\Debug\BrainfuckTranspiler.csprojResolveAssemblyReference.cache
+D:\Data\Projects\MathLangTree_Antlr\BrainfuckTranspiler\obj\Debug\BrainfuckTranspiler.csproj.CoreCompileInputs.cache
+D:\Data\Projects\MathLangTree_Antlr\BrainfuckTranspiler\obj\Debug\BrainfuckTranspiler.dll
+D:\Data\Projects\MathLangTree_Antlr\BrainfuckTranspiler\obj\Debug\BrainfuckTranspiler.pdb

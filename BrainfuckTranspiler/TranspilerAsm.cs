@@ -1,4 +1,5 @@
 ﻿using System;
+using AstNode = Antlr.Runtime.Tree.ITree;
 
 namespace BrainfuckTranspiler
 {
@@ -126,6 +127,15 @@ namespace BrainfuckTranspiler
             }
             _collectorPtr++;
             _collectorSize++;
+        }
+
+
+        private void InsertBlock(AstNode node)
+        {
+            for (int i = 0; i < node.ChildCount; i++)
+            {
+                ParseOperation(node.GetChild(i));
+            }
         }
     }
 }

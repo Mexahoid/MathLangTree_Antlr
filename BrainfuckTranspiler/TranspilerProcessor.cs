@@ -100,16 +100,16 @@ namespace BrainfuckTranspiler
         private void ProcessConditionalEquality(AstNode node)
         {
             var op = node.GetChild(0);
-            int blockTrueNum = 1, blockFalseNum = 2;
+            int blockFalseNum = 1, blockTrueNum = 2;
             switch (op.Text)
             {
-                case "==":
-                    blockTrueNum = 1;
-                    blockFalseNum = 2;
-                    break;
                 case "<>":
-                    blockTrueNum = 2;
                     blockFalseNum = 1;
+                    blockTrueNum = 2;
+                    break;
+                case "==":
+                    blockFalseNum = 2;
+                    blockTrueNum = 1;
                     break;
             }
 
@@ -124,20 +124,17 @@ namespace BrainfuckTranspiler
             Move(_summatorPtr, _equatorMainPtr, '+');   // Перенесли в эквотер
             Goto(_equatorMainPtr);
             _code.Append("+[-[");
-            var blockTrue = node.GetChild(blockTrueNum);
-            for (int i = 0; i < blockTrue.ChildCount; i++)
-            {
-                ParseOperation(blockTrue.GetChild(i));
-            }
+            
+
+            InsertBlock(node.GetChild(blockFalseNum));
+
             Goto(_equatorHelperPtr);
             _code.Append("-");
             Clear(_equatorMainPtr);
             _code.Append("]>+[<");
-            var blockFalse = node.GetChild(blockFalseNum);
-            for (int i = 0; i < blockFalse.ChildCount; i++)
-            {
-                ParseOperation(blockFalse.GetChild(i));
-            }
+            
+            InsertBlock(node.GetChild(blockTrueNum));
+
             Clear(_equatorHelperPtr);
             _code.Append("]");
             Clear(_equatorMainPtr);

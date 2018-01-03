@@ -38,3 +38,6 @@ D:\Gits\MathLangTree_Antlr\obj\Debug\MathLang.csprojResolveAssemblyReference.cac
 D:\Gits\MathLangTree_Antlr\obj\Debug\MathLang.csproj.CoreCompileInputs.cache
 D:\Gits\MathLangTree_Antlr\obj\Debug\MathLang.exe
 D:\Gits\MathLangTree_Antlr\obj\Debug\MathLang.pdb
+D:\Data\Projects\MathLangTree_Antlr\bin\Debug\BrainfuckTranspiler.dll
+D:\Data\Projects\MathLangTree_Antlr\bin\Debug\BrainfuckTranspiler.pdb
+D:\Data\Projects\MathLangTree_Antlr\obj\Debug\MathLang.pdb
