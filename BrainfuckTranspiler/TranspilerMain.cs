@@ -24,7 +24,7 @@ namespace BrainfuckTranspiler
         /// </summary>
         private int _varPtr;
 
-        // |v|a|r|s|D|S|A|B|C1|C2|..|CN|<...>|EF2|ET2|EF1|ET1|EF0|ET0|
+        // |v|a|r|s|D|S|A|B|G1|G2|C1|C2|..|CN|<...>|EF2|ET2|EF1|ET1|EF0|ET0|
         // D - Duplicator
         // S - Summator/Substractor
         // A - Accumulator
@@ -32,6 +32,7 @@ namespace BrainfuckTranspiler
         // EM - Equator False
         // EH - Equator True
         // CN - Collector
+        // G1, G2 - General purpose
 
         private int _innerPtr;
         /// <summary>
@@ -41,8 +42,8 @@ namespace BrainfuckTranspiler
         private int _summatorPtr;
         private int _accumulatorPtr;
         private int _basePtr;
+        private int _generalPtr;
         private int _collectorPtr;
-        private int _collectorSize;
         private int _ifsInRow;
         
 
@@ -62,11 +63,11 @@ namespace BrainfuckTranspiler
         {
             for (int i = 0; i < _blockNode.ChildCount; i++)
                 FindVars(_blockNode.GetChild(i));
-            _summatorPtr = _duplicatorPtr + 1;          // S после D
-            _accumulatorPtr = _summatorPtr + 1;         // A после S
-            _basePtr = _accumulatorPtr + 1;
-            _collectorPtr = _basePtr + 1;
-            _collectorSize = 0;
+            _summatorPtr = _duplicatorPtr + 1;      // S после D
+            _accumulatorPtr = _summatorPtr + 1;     // A после S
+            _basePtr = _accumulatorPtr + 1;         // И т.д., пока губы как у старой
+            _generalPtr = _basePtr + 1;             // бабки не втянутся чтоб пиздец
+            _collectorPtr = _generalPtr + 2;        // и помереть нахуй
             _ifsInRow = 0;
             
 

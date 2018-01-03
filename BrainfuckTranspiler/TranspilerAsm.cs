@@ -142,12 +142,10 @@ namespace BrainfuckTranspiler
         private void LoadToCollector(int from)
         {
             Move(from, _collectorPtr++, '+');
-            _collectorSize++;
         }
         private void GetFromCollector(int where)
         {
             Move(--_collectorPtr, where, '+');
-            _collectorSize--;
         }
 
 
@@ -165,19 +163,23 @@ namespace BrainfuckTranspiler
                     _code.Append('+');
             }
             _collectorPtr++;
-            _collectorSize++;
         }
 
 
         private void InsertBlock(AstNode node)
         {
-            if (node.Text == "if")
+            if (node?.Text == "if")
                 ParseOperation(node);
             else
-                for (int i = 0; i < node.ChildCount; i++)
-                {
+                for (int i = 0; i < node?.ChildCount; i++)
                     ParseOperation(node.GetChild(i));
-                }
+        }
+
+        private void EvaluateTo(AstNode node, int where)
+        {
+            InitQueue(node);
+            ProcessQueue();
+            GetFromCollector(where);
         }
 
     }

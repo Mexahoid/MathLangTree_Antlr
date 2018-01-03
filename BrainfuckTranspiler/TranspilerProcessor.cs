@@ -27,10 +27,8 @@ namespace BrainfuckTranspiler
         {
             AstNode var1 = node.GetChild(0);
             AstNode var2 = node.GetChild(1);
-            //if (_reserved.Contains(var2.Text)) // *+-/
-            {
-                InitQueue(var2);
-            }
+            InitQueue(var2);
+
             ProcessQueue();
             GetFromCollector(_varTable[var1.Text]);
         }
@@ -100,44 +98,94 @@ namespace BrainfuckTranspiler
             int equatorFalsePtr = Size - _ifsInRow * 2;
             int equatorTruePtr = equatorFalsePtr + 1;
 
+            var tuple = ProcessTerm(node);
 
-            var op = node.GetChild(0);
-            bool haveElseBlock = node.ChildCount == 3;
-            int blockFalseNum = 1, blockTrueNum = 2;
-            if (op.Text == "==")
-            {
-                blockFalseNum = 2;
-                blockTrueNum = 1;
-            }
-
-            LoadToCollector(op.GetChild(0).Text);
-            LoadToCollector(op.GetChild(1).Text);
-
-            GetFromCollector(_basePtr);
-            GetFromCollector(_accumulatorPtr);
-
-            Sum('-');
 
             Move(_summatorPtr, equatorFalsePtr, '+');   // Перенесли в эквотер
             Goto(equatorFalsePtr);
             _code.Append("+[-[");
-            
-            if(haveElseBlock || blockFalseNum == 1)
-                InsertBlock(node.GetChild(blockFalseNum));
+
+            InsertBlock(tuple.Item2);
 
             Goto(equatorTruePtr);
             _code.Append("-");
             Clear(equatorFalsePtr);
             _code.Append("]>+[<");
 
-            if (haveElseBlock || blockTrueNum == 1)
-                InsertBlock(node.GetChild(blockTrueNum));
+            InsertBlock(tuple.Item1);
 
             Clear(equatorTruePtr);
             _code.Append("]");
             Clear(equatorFalsePtr);
             _code.Append("]");
             _ifsInRow--;
+        }
+
+        private Tuple<AstNode, AstNode> ProcessTerm(AstNode node)
+        {
+
+            AstNode trueChild = node.GetChild(1);
+            AstNode falseChild = node.ChildCount == 3 ? node.GetChild(2) : null;
+            switch (node.GetChild(0).Text)
+            {
+                case ">":
+                case ">=":
+                case "<":
+                case "<=":
+                    var tuple = CurryIf(node.GetChild(0));
+
+
+                    return Tuple.Create(tuple.Item1, tuple.Item2);
+                case "<>":
+                case "==":
+                    AstNode tempNode = node.GetChild(0).GetChild(0);
+                    if (_reserved.Contains(tempNode.Text))
+                    {
+                        EvaluateTo(tempNode, _generalPtr);
+                        LoadToCollector(_generalPtr);
+                    }
+                    else
+                        LoadToCollector(tempNode.Text);
+
+                    tempNode = node.GetChild(0).GetChild(1);
+
+                    if (_reserved.Contains(tempNode.Text))
+                    {
+                        EvaluateTo(tempNode, _generalPtr + 1);
+                        LoadToCollector(_generalPtr + 1);
+                    }
+                    else
+                        LoadToCollector(tempNode.Text);
+
+                    GetFromCollector(_basePtr);
+                    GetFromCollector(_accumulatorPtr);
+
+                    Sum('-');
+
+                    return node.GetChild(0).Text == "<>" ?
+                        Tuple.Create(falseChild, trueChild) :
+                        Tuple.Create(trueChild, falseChild);
+                default:
+                    return null;
+            }
+        }
+
+        private Tuple<AstNode, AstNode, string> CurryIf(AstNode node)
+        {
+            AstNode left = node.GetChild(1);
+            AstNode right = node.ChildCount == 3 ? node.GetChild(2) : null;
+
+            switch (node.GetChild(0).Text)
+            {
+                case ">":
+                case ">=":
+                    return Tuple.Create(left, right, node.GetChild(0).Text);
+                case "<":
+                    return Tuple.Create(right, left, ">=");
+                case "<=":
+                    return Tuple.Create(right, left, ">");
+            }
+            return null;
         }
     }
 }
