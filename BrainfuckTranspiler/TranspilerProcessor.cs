@@ -104,8 +104,8 @@ namespace BrainfuckTranspiler
             Move(_summatorPtr, equatorFalsePtr, '+');   // Перенесли в эквотер
             Goto(equatorFalsePtr);
             string symbol = "+";
-            if (node.GetChild(0).Text == ">" || node.GetChild(0).Text == "<")
-                symbol = "";
+            if (tuple.Item3 == ">")
+                symbol = "++";
             _code.Append(symbol + "[-[");
 
             InsertBlock(tuple.Item2);
@@ -134,7 +134,7 @@ namespace BrainfuckTranspiler
             var tuple = ProcessTerm(node);
         }
 
-        private Tuple<AstNode, AstNode> ProcessTerm(AstNode node)
+        private Tuple<AstNode, AstNode, string> ProcessTerm(AstNode node)
         {
             AstNode trueChild = node.GetChild(1);
             AstNode falseChild = node.ChildCount == 3 ? node.GetChild(2) : null;
@@ -164,14 +164,12 @@ namespace BrainfuckTranspiler
                 case ">=":
                 case "<":
                 case "<=":
-                    var tuple = CurryIf(node);
 
-                    
                     GetFromCollector(_basePtr);
                     GetFromCollector(_accumulatorPtr);
                     Sum('-');
 
-                    return Tuple.Create(tuple.Item1, tuple.Item2);
+                    return CurryIf(node);
                 case "<>":
                 case "==":
                     
@@ -181,8 +179,8 @@ namespace BrainfuckTranspiler
                     Sum('-');
 
                     return node.GetChild(0).Text == "<>" ?
-                        Tuple.Create(falseChild, trueChild) :
-                        Tuple.Create(trueChild, falseChild);
+                        Tuple.Create(falseChild, trueChild, "<>") :
+                        Tuple.Create(trueChild, falseChild, "==");
                 default:
                     return null;
             }
