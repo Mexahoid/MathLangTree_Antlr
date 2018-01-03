@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Text;
 
 
@@ -19,18 +17,20 @@ namespace BrainfuckTranspiler
 
         private readonly Queue<AstNode> _operationsQueue;
 
+        private const int Size = 30000;
+
         /// <summary>
         /// Указывает на последний индекс, принадлежащий переменной
         /// </summary>
         private int _varPtr;
 
-        // |v|a|r|i|a|b|l|e|s|D|S|A|B|EM|EH|C1|C2|..|CN|
+        // |v|a|r|s|D|S|A|B|C1|C2|..|CN|<...>|EF2|ET2|EF1|ET1|EF0|ET0|
         // D - Duplicator
         // S - Summator/Substractor
         // A - Accumulator
         // B - Base
-        // EM - Equator Main
-        // EH - Equator Helper
+        // EM - Equator False
+        // EH - Equator True
         // CN - Collector
 
         private int _innerPtr;
@@ -41,25 +41,10 @@ namespace BrainfuckTranspiler
         private int _summatorPtr;
         private int _accumulatorPtr;
         private int _basePtr;
-        private int _equatorMainPtr;
-        private int _equatorHelperPtr;
         private int _collectorPtr;
         private int _collectorSize;
-
-        private int Ptr
-        {
-            get => _innerPtr;
-            set
-            {
-                if (value > _innerPtr)
-                    for (int i = 0; i < value - _innerPtr; i++)
-                        _code.Append('>');
-                else if (value < _innerPtr)
-                    for (int i = 0; i < _innerPtr - value; i++)
-                        _code.Append('<');
-                _innerPtr = value;
-            }
-        }
+        private int _ifsInRow;
+        
 
 
 
@@ -80,10 +65,10 @@ namespace BrainfuckTranspiler
             _summatorPtr = _duplicatorPtr + 1;          // S после D
             _accumulatorPtr = _summatorPtr + 1;         // A после S
             _basePtr = _accumulatorPtr + 1;
-            _equatorMainPtr = _basePtr + 1;
-            _equatorHelperPtr = _equatorMainPtr + 1;
-            _collectorPtr = _equatorHelperPtr + 1;
+            _collectorPtr = _basePtr + 1;
             _collectorSize = 0;
+            _ifsInRow = 0;
+            
 
             //На этом моменте сформирована таблица переменных изначальных
             for (int i = 0; i < _blockNode.ChildCount; i++)
@@ -124,6 +109,7 @@ namespace BrainfuckTranspiler
                     ProcessInput(node);
                     break;
                 case "if":
+                    _ifsInRow++;
                     ProcessConditionalEquality(node);
                     break;
             }

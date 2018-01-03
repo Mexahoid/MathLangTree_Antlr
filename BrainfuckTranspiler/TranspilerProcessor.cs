@@ -47,15 +47,13 @@ namespace BrainfuckTranspiler
 
         private void ProcessQueue()
         {
-            bool acc = false;
-            Action<char> act;
-
             while (_operationsQueue.Count > 0)
             {
                 if (_reserved.Contains(_operationsQueue.Peek().Text))
                 {
                     GetFromCollector(_accumulatorPtr);
                     GetFromCollector(_basePtr);
+                    Action<char> act;
                     switch (_operationsQueue.Peek().Text)
                     {
                         case "+":
@@ -99,18 +97,17 @@ namespace BrainfuckTranspiler
 
         private void ProcessConditionalEquality(AstNode node)
         {
+            int equatorFalsePtr = Size - _ifsInRow * 2;
+            int equatorTruePtr = equatorFalsePtr + 1;
+
+
             var op = node.GetChild(0);
+            bool haveElseBlock = node.ChildCount == 3;
             int blockFalseNum = 1, blockTrueNum = 2;
-            switch (op.Text)
+            if (op.Text == "==")
             {
-                case "<>":
-                    blockFalseNum = 1;
-                    blockTrueNum = 2;
-                    break;
-                case "==":
-                    blockFalseNum = 2;
-                    blockTrueNum = 1;
-                    break;
+                blockFalseNum = 2;
+                blockTrueNum = 1;
             }
 
             LoadToCollector(op.GetChild(0).Text);
@@ -121,24 +118,26 @@ namespace BrainfuckTranspiler
 
             Sum('-');
 
-            Move(_summatorPtr, _equatorMainPtr, '+');   // Перенесли в эквотер
-            Goto(_equatorMainPtr);
+            Move(_summatorPtr, equatorFalsePtr, '+');   // Перенесли в эквотер
+            Goto(equatorFalsePtr);
             _code.Append("+[-[");
             
+            if(haveElseBlock || blockFalseNum == 1)
+                InsertBlock(node.GetChild(blockFalseNum));
 
-            InsertBlock(node.GetChild(blockFalseNum));
-
-            Goto(_equatorHelperPtr);
+            Goto(equatorTruePtr);
             _code.Append("-");
-            Clear(_equatorMainPtr);
+            Clear(equatorFalsePtr);
             _code.Append("]>+[<");
-            
-            InsertBlock(node.GetChild(blockTrueNum));
 
-            Clear(_equatorHelperPtr);
+            if (haveElseBlock || blockTrueNum == 1)
+                InsertBlock(node.GetChild(blockTrueNum));
+
+            Clear(equatorTruePtr);
             _code.Append("]");
-            Clear(_equatorMainPtr);
+            Clear(equatorFalsePtr);
             _code.Append("]");
+            _ifsInRow--;
         }
     }
 }

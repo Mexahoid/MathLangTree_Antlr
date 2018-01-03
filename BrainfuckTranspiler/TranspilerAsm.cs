@@ -39,7 +39,7 @@ namespace BrainfuckTranspiler
             Goto(_basePtr);
             _code.Append("-]");
         }
-        
+
         /// <summary>
         /// Переносим значение из регистра D в нужную ячейку.
         /// </summary>
@@ -76,19 +76,58 @@ namespace BrainfuckTranspiler
             Goto(_duplicatorPtr);
             _code.Append("-]");
         }
-        
+
         /// <summary>
         /// Переводит указатель на выбранную позицию.
         /// </summary>
         /// <param name="pos">Позиция перевода.</param>
         private void Goto(int pos)
         {
-            while (_innerPtr < pos)
-                Ptr++;
+            void Increment()
+            {
+                _innerPtr++;
+                _code.Append('>');
+            }
 
-            while (_innerPtr > pos)
-                Ptr--;
+            void Decrement()
+            {
+                _innerPtr--;
+                _code.Append('<');
+            }
+            if (pos == Size)
+                throw new Exception("Ошибка параметра в Goto");
+
+            if (pos < 15000 && _innerPtr < 15000 || pos >= 15000 && _innerPtr >= 15000)
+            {
+                while (_innerPtr < pos)
+                    Increment();
+
+                while (_innerPtr > pos)
+                    Decrement();
+
+            }
+            else if (_innerPtr < 15000 && pos >= 15000)
+            {
+                while (_innerPtr != pos)
+                {
+                    Decrement();
+                    // Если -1, то ставим в 29999
+                    if (_innerPtr < 0)
+                        _innerPtr = Size + _innerPtr;
+                }
+            }
+            else if (_innerPtr >= 15000 && pos < 15000)
+            {
+                while (_innerPtr != pos)
+                {
+                    Increment();
+                    // Если 30000, то ставим в 0
+                    if (_innerPtr > 29999)
+                        _innerPtr = 0;
+                }
+            }
         }
+
 
         /// <summary>
         /// Очищает ячейку по указателю.
@@ -132,10 +171,14 @@ namespace BrainfuckTranspiler
 
         private void InsertBlock(AstNode node)
         {
-            for (int i = 0; i < node.ChildCount; i++)
-            {
-                ParseOperation(node.GetChild(i));
-            }
+            if (node.Text == "if")
+                ParseOperation(node);
+            else
+                for (int i = 0; i < node.ChildCount; i++)
+                {
+                    ParseOperation(node.GetChild(i));
+                }
         }
+
     }
 }

@@ -8,8 +8,19 @@ if(B == D)
 	print(A);
 	print(D);
 }
-else
+else if(A == D)
 {
 	print(C);
+	print(A);
+
+	if(C == D)
+	{
+		print(A);
+		print(A);
+	}
+}
+else
+{
+	print(B);
 	print(A);
 }
