@@ -103,7 +103,10 @@ namespace BrainfuckTranspiler
 
             Move(_summatorPtr, equatorFalsePtr, '+');   // Перенесли в эквотер
             Goto(equatorFalsePtr);
-            _code.Append("+[-[");
+            string symbol = "+";
+            if (node.GetChild(0).Text == ">" || node.GetChild(0).Text == "<")
+                symbol = "";
+            _code.Append(symbol + "[-[");
 
             InsertBlock(tuple.Item2);
 
@@ -121,44 +124,59 @@ namespace BrainfuckTranspiler
             _ifsInRow--;
         }
 
+
+
+        private void ProcessConditionalInequality(AstNode node)
+        {
+            int equatorFalsePtr = Size - _ifsInRow * 2;
+            int equatorTruePtr = equatorFalsePtr + 1;
+
+            var tuple = ProcessTerm(node);
+        }
+
         private Tuple<AstNode, AstNode> ProcessTerm(AstNode node)
         {
-
             AstNode trueChild = node.GetChild(1);
             AstNode falseChild = node.ChildCount == 3 ? node.GetChild(2) : null;
+            AstNode tempNode = node.GetChild(0).GetChild(0);
+
+            if (_reserved.Contains(tempNode.Text))
+            {
+                EvaluateTo(tempNode, _generalPtr);
+                LoadToCollector(_generalPtr);
+            }
+            else
+                LoadToCollector(tempNode.Text);
+
+            tempNode = node.GetChild(0).GetChild(1);
+
+            if (_reserved.Contains(tempNode.Text))
+            {
+                EvaluateTo(tempNode, _generalPtr + 1);
+                LoadToCollector(_generalPtr + 1);
+            }
+            else
+                LoadToCollector(tempNode.Text);
+
             switch (node.GetChild(0).Text)
             {
                 case ">":
                 case ">=":
                 case "<":
                 case "<=":
-                    var tuple = CurryIf(node.GetChild(0));
+                    var tuple = CurryIf(node);
 
+                    
+                    GetFromCollector(_basePtr);
+                    GetFromCollector(_accumulatorPtr);
+                    Sum('-');
 
                     return Tuple.Create(tuple.Item1, tuple.Item2);
                 case "<>":
                 case "==":
-                    AstNode tempNode = node.GetChild(0).GetChild(0);
-                    if (_reserved.Contains(tempNode.Text))
-                    {
-                        EvaluateTo(tempNode, _generalPtr);
-                        LoadToCollector(_generalPtr);
-                    }
-                    else
-                        LoadToCollector(tempNode.Text);
-
-                    tempNode = node.GetChild(0).GetChild(1);
-
-                    if (_reserved.Contains(tempNode.Text))
-                    {
-                        EvaluateTo(tempNode, _generalPtr + 1);
-                        LoadToCollector(_generalPtr + 1);
-                    }
-                    else
-                        LoadToCollector(tempNode.Text);
-
-                    GetFromCollector(_basePtr);
+                    
                     GetFromCollector(_accumulatorPtr);
+                    GetFromCollector(_basePtr);
 
                     Sum('-');
 
@@ -173,7 +191,7 @@ namespace BrainfuckTranspiler
         private Tuple<AstNode, AstNode, string> CurryIf(AstNode node)
         {
             AstNode left = node.GetChild(1);
-            AstNode right = node.ChildCount == 3 ? node.GetChild(2) : null;
+            AstNode right = node.ChildCount < 4 ? node.GetChild(2) : null;
 
             switch (node.GetChild(0).Text)
             {

@@ -3,24 +3,13 @@ B = 66;
 C = 67;
 D = 68;
 
-if(B + 2 <> D - 2)
+if(A >= D)
 {
-	print(A);
-	print(D);
-}
-else if(A == D)
-{
-	print(C);
-	print(A);
-
-	if(C == D)
-	{
-		print(A);
-		print(A);
-	}
+	print(B);
+	print(B);
 }
 else
 {
-	print(B);
-	print(A);
+	print(C);
+	print(C);
 }

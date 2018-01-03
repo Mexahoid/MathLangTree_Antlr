@@ -47,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Input.txt" />
+    <Content Include="Tests.txt" />
   </ItemGroup>
   <ItemGroup>
     <AntlrGrammarFile Include="MathLang.g" />
