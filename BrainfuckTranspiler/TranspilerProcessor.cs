@@ -121,26 +121,27 @@ namespace BrainfuckTranspiler
 
             Sum('-');
 
-            Move(_summatorPtr, _equatorPtr, '+');   // Перенесли в эквотер
-            Goto(_equatorPtr);
+            Move(_summatorPtr, _equatorMainPtr, '+');   // Перенесли в эквотер
+            Goto(_equatorMainPtr);
             _code.Append("+[-[");
-            Clear(_equatorPtr);
             var blockTrue = node.GetChild(blockTrueNum);
             for (int i = 0; i < blockTrue.ChildCount; i++)
             {
                 ParseOperation(blockTrue.GetChild(i));
             }
-            Clear(_equatorPtr);
-            _code.Append("]");
-            Goto(_equatorPtr);
-            _code.Append("+[");
+            Goto(_equatorHelperPtr);
+            _code.Append("-");
+            Clear(_equatorMainPtr);
+            _code.Append("]>+[<");
             var blockFalse = node.GetChild(blockFalseNum);
             for (int i = 0; i < blockFalse.ChildCount; i++)
             {
                 ParseOperation(blockFalse.GetChild(i));
             }
-            Clear(_equatorPtr);
-            _code.Append("]]");
+            Clear(_equatorHelperPtr);
+            _code.Append("]");
+            Clear(_equatorMainPtr);
+            _code.Append("]");
         }
     }
 }
