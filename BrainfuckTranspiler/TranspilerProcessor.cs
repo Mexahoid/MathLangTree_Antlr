@@ -103,6 +103,7 @@ namespace BrainfuckTranspiler
 
             Move(_summatorPtr, equatorFalsePtr, '+');   // Перенесли в эквотер
             Goto(equatorFalsePtr);
+            _code.Append("[>++<-]>[<+>-]<");
             string symbol = "+";
             if (tuple.Item3 == ">")
                 symbol = "++";
@@ -123,17 +124,7 @@ namespace BrainfuckTranspiler
             _code.Append("]");
             _ifsInRow--;
         }
-
-
-
-        private void ProcessConditionalInequality(AstNode node)
-        {
-            int equatorFalsePtr = Size - _ifsInRow * 2;
-            int equatorTruePtr = equatorFalsePtr + 1;
-
-            var tuple = ProcessTerm(node);
-        }
-
+        
         private Tuple<AstNode, AstNode, string> ProcessTerm(AstNode node)
         {
             AstNode trueChild = node.GetChild(1);
@@ -173,8 +164,8 @@ namespace BrainfuckTranspiler
                 case "<>":
                 case "==":
                     
-                    GetFromCollector(_accumulatorPtr);
                     GetFromCollector(_basePtr);
+                    GetFromCollector(_accumulatorPtr);
 
                     Sum('-');
 
