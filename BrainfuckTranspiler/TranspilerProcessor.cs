@@ -103,10 +103,10 @@ namespace BrainfuckTranspiler
 
             Move(_summatorPtr, equatorFalsePtr, '+');   // Перенесли в эквотер
             Goto(equatorFalsePtr);
-            _code.Append("[>++<-]>[<+>-]<");
             string symbol = "+";
             if (tuple.Item3 == ">")
                 symbol = "++";
+            _code.Append("[>+" + symbol + "<-]>[<+>-]<");
             _code.Append(symbol + "[-[");
 
             InsertBlock(tuple.Item2);
