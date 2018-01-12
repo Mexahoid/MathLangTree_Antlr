@@ -95,6 +95,11 @@ namespace BrainfuckTranspiler
 
         private void ProcessConditionalEquality(AstNode node)
         {
+            if (node.GetChild(0).Text == ">" || node.GetChild(0).Text == ">=")
+            {
+                ProcessInequality(node);
+                return;
+            }
             int equatorFalsePtr = Size - _ifsInRow * 2;
             int equatorTruePtr = equatorFalsePtr + 1;
 
@@ -124,7 +129,69 @@ namespace BrainfuckTranspiler
             _code.Append("]");
             _ifsInRow--;
         }
-        
+
+
+        private void ProcessInequality(AstNode node)
+        {
+            AstNode condNode = node.GetChild(0);
+            //var tuple = ProcessTerm(node);
+
+            
+            Copy(_varTable[condNode.GetChild(0).Text], _thresholdPtr);
+            Copy(_varTable[condNode.GetChild(1).Text], _valuePtr);
+            
+            Goto(_valuePtr);
+            _code.Append('[');
+
+            Copy(_thresholdPtr, _accumulatorPtr);
+            Copy(_valuePtr, _basePtr);
+
+            Sum('-');
+
+            Move(_summatorPtr, _duplicatorPtr, '+');    // Перенесли разницу в D
+            Goto(_duplicatorPtr);
+            _code.Append("[");
+            Goto(_inequalityPtr);
+            _code.Append("++");
+            Goto(_duplicatorPtr);
+            _code.Append("-]");                         // В I записали удвоенную разницу
+
+
+            Goto(_inequalityPtr);
+            _code.Append('[');
+            Clear(_inequalityPtr);
+
+            Goto(_helperPtr);           // Перешли на Н
+            _code.Append('+');          // Увеличили 
+            
+            Goto(_inequalityPtr);
+            _code.Append(']');          // Увеличили и вышли из цикла I
+
+
+            Goto(_helperPtr);           // Перешли на Н
+            _code.Append("-[");         // Уменьшили и пытаемся начать цикл
+            Clear(_helperPtr);
+            Clear(_inequalityPtr);
+            Goto(_markPtr);
+            _code.Append('+');
+            Clear(_valuePtr);
+            _code.Append('+');
+            Clear(_thresholdPtr);
+            Goto(_helperPtr);
+            _code.Append(']');
+            
+            Goto(_valuePtr);
+            _code.Append("-]");          
+
+            //
+            Goto(_markPtr);
+            for (int i = 0; i < 65; i++)
+            {
+                _code.Append('+');
+            }
+            _code.Append('.');
+        }
+
         private Tuple<AstNode, AstNode, string> ProcessTerm(AstNode node)
         {
             AstNode trueChild = node.GetChild(1);
@@ -156,14 +223,10 @@ namespace BrainfuckTranspiler
                 case "<":
                 case "<=":
 
-                    GetFromCollector(_basePtr);
-                    GetFromCollector(_accumulatorPtr);
-                    Sum('-');
-
                     return CurryIf(node);
                 case "<>":
                 case "==":
-                    
+
                     GetFromCollector(_basePtr);
                     GetFromCollector(_accumulatorPtr);
 

@@ -24,7 +24,7 @@ namespace BrainfuckTranspiler
         /// </summary>
         private int _varPtr;
 
-        // |v|a|r|s|D|S|A|B|G1|G2|C1|C2|..|CN|<...>|EF2|ET2|EF1|ET1|EF0|ET0|
+        // |v|a|r|s|D|S|A|B|G1|G2|T|V|M|I|H|C1|C2|..|CN|<...>|EF2|ET2|EF1|ET1|EF0|ET0|
         // D - Duplicator
         // S - Summator/Substractor
         // A - Accumulator
@@ -33,6 +33,11 @@ namespace BrainfuckTranspiler
         // EH - Equator True
         // CN - Collector
         // G1, G2 - General purpose
+        // T - Threshold
+        // V - Value
+        // M - Marker
+        // I - Inequality
+        // H - Helper
 
         private int _innerPtr;
         /// <summary>
@@ -45,15 +50,21 @@ namespace BrainfuckTranspiler
         private int _generalPtr;
         private int _collectorPtr;
         private int _ifsInRow;
-        
-
-
+        private int _thresholdPtr;
+        private int _valuePtr;
+        private int _markPtr;
+        private int _inequalityPtr;
+        private int _helperPtr;
 
         public Transpiler(AstNode node)
         {
             _blockNode = node;
             _varTable = new Dictionary<string, int>();
-            _reserved = new List<string> { "BLOCK", "=", "input", "print", "-", "+", "*", "/", "==", "<>", "if" };
+            _reserved = new List<string>
+            {
+                "BLOCK", "=", "input", "print", "-", "+", "*", "/", "==", "<>", "if",
+                ">", "<", ">=", "<="
+            };
             _code = new StringBuilder();
             _operationsQueue = new Queue<AstNode>();
         }
@@ -67,7 +78,13 @@ namespace BrainfuckTranspiler
             _accumulatorPtr = _summatorPtr + 1;     // A после S
             _basePtr = _accumulatorPtr + 1;         // И т.д., пока губы как у старой
             _generalPtr = _basePtr + 1;             // бабки не втянутся чтоб пиздец
-            _collectorPtr = _generalPtr + 2;        // и помереть нахуй
+            _thresholdPtr = _generalPtr + 2;        // и помереть нахуй
+            _valuePtr = _thresholdPtr + 1;
+            _markPtr = _valuePtr + 1;
+            _inequalityPtr = _markPtr + 1;
+            _helperPtr = _inequalityPtr + 1;
+            _collectorPtr = _helperPtr + 1;
+
             _ifsInRow = 0;
             
 
@@ -115,7 +132,5 @@ namespace BrainfuckTranspiler
                     break;
             }
         }
-
-
     }
 }
