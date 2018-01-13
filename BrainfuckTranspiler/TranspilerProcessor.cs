@@ -95,15 +95,16 @@ namespace BrainfuckTranspiler
 
         private void ProcessConditionalEquality(AstNode node)
         {
-            if (node.GetChild(0).Text == ">" || node.GetChild(0).Text == ">=")
+            string op = node.GetChild(0).Text;
+            if (op == ">" || op == ">=" || op == "<" || op == "<=")
             {
-                ProcessInequality(node);
+                ProcessStrictInequality(node);
                 return;
             }
+            var tuple = ProcessTerm(node);
             int equatorFalsePtr = Size - _ifsInRow * 2;
             int equatorTruePtr = equatorFalsePtr + 1;
 
-            var tuple = ProcessTerm(node);
 
 
             Move(_summatorPtr, equatorFalsePtr, '+');   // Перенесли в эквотер
@@ -128,36 +129,42 @@ namespace BrainfuckTranspiler
         }
 
 
-        private void ProcessInequality(AstNode node)
+        private void ProcessStrictInequality(AstNode node)
         {
             AstNode condNode = node.GetChild(0);
             var tuple = ProcessTerm(node);
 
-            
-            GetFromCollector(_valuePtr);
-            GetFromCollector(_thresholdPtr);
+            int inequatorThresholdPtr = Size - _ifsInRow * 6;
+            int inequatorValuePtr = inequatorThresholdPtr + 1;
+            int inequatorInequalityPtr = inequatorValuePtr + 1;
+            int inequatorHelperPtr = inequatorInequalityPtr + 1;
+            int inequatorGeneralFirst = inequatorHelperPtr + 1;
+            int inequatorGeneralSecond = inequatorGeneralFirst + 1;
 
-            Goto(_generalPtr + 1);
+            GetFromCollector(inequatorValuePtr);
+            GetFromCollector(inequatorThresholdPtr);
+
+            Goto(inequatorGeneralSecond);
             Incrt();
 
-            Goto(_thresholdPtr);
+            Goto(inequatorThresholdPtr);
             LpStrt();
 
-            Goto(_generalPtr);
+            Goto(inequatorGeneralFirst);
             Incrt();
 
-            Goto(_valuePtr);
+            Goto(inequatorValuePtr);
             LpStrt();
 
-            Copy(_thresholdPtr, _accumulatorPtr);
-            Copy(_valuePtr, _basePtr);
+            Copy(inequatorThresholdPtr, _accumulatorPtr);
+            Copy(inequatorValuePtr, _basePtr);
 
             Sum('-');
 
             Move(_summatorPtr, _duplicatorPtr, '+');    // Перенесли разницу в D
             Goto(_duplicatorPtr);
             LpStrt();
-            Goto(_inequalityPtr);
+            Goto(inequatorInequalityPtr);
             Incrt();
             Incrt();
             Goto(_duplicatorPtr);
@@ -165,47 +172,136 @@ namespace BrainfuckTranspiler
             LpStp();                      // В I записали удвоенную разницу
 
 
-            Goto(_inequalityPtr);
+            Goto(inequatorInequalityPtr);
             LpStrt();
-            Clear(_inequalityPtr);
+            Clear(inequatorInequalityPtr);
 
-            Goto(_helperPtr);           // Перешли на Н
+            Goto(inequatorHelperPtr);           // Перешли на Н
             Incrt();                    // Увеличили 
 
-            Goto(_inequalityPtr);
+            Goto(inequatorInequalityPtr);
             LpStp();                    // Увеличили и вышли из цикла I
 
 
-            Goto(_helperPtr);           // Перешли на Н
+            Goto(inequatorHelperPtr);           // Перешли на Н
             Decrt();
             LpStrt();
-            Clear(_helperPtr);
-            Clear(_inequalityPtr);
-            Goto(_generalPtr + 1);
+            Clear(inequatorHelperPtr);
+            Clear(inequatorInequalityPtr);
+            Goto(inequatorGeneralSecond);
             Decrt();
-            Clear(_valuePtr);
+            Clear(inequatorValuePtr);
             Incrt();
-            Goto(_helperPtr);
+            Goto(inequatorHelperPtr);
             LpStp();
 
-            Goto(_valuePtr);
+            Goto(inequatorValuePtr);
             Decrt();
             LpStp();
-            Clear(_thresholdPtr);
+            Clear(inequatorThresholdPtr);
             LpStp();
-            Clear(_valuePtr);
+            Clear(inequatorValuePtr);
 
-            Move(_generalPtr + 1, _generalPtr, '+', false);
+            Move(inequatorGeneralSecond, inequatorGeneralFirst, '+', false);
+
+            // Если сумма == 1, то это false, если 2, то норм
+            Goto(inequatorGeneralFirst);
+            Decrt();
+            CreateConditionalBlocks(
+                inequatorGeneralFirst,
+                inequatorGeneralSecond,
+                tuple.Item1,
+                tuple.Item2);
+            _ifsInRow--;
+        }
+
+        private void ProcessUnstrictInequality(AstNode node)
+        {
+
+            AstNode condNode = node.GetChild(0);
+            var tuple = ProcessTerm(node);
+
+            int inequatorThresholdPtr = Size - _ifsInRow * 6;
+            int inequatorValuePtr = inequatorThresholdPtr + 1;
+            int inequatorInequalityPtr = inequatorValuePtr + 1;
+            int inequatorHelperPtr = inequatorInequalityPtr + 1;
+            int inequatorGeneralFirst = inequatorHelperPtr + 1;
+            int inequatorGeneralSecond = inequatorGeneralFirst + 1;
+
+            GetFromCollector(inequatorValuePtr);
+            GetFromCollector(inequatorThresholdPtr);
+
+            Goto(inequatorGeneralSecond);
+            Incrt();
+
+            Goto(inequatorThresholdPtr);
+            LpStrt();
+
+            Goto(inequatorGeneralFirst);
+            Incrt();
+
+            Goto(inequatorValuePtr);
+            LpStrt();
+
+            Copy(inequatorThresholdPtr, _accumulatorPtr);
+            Copy(inequatorValuePtr, _basePtr);
+
+            Sum('-');
+
+            Move(_summatorPtr, _duplicatorPtr, '+');    // Перенесли разницу в D
+            Goto(_duplicatorPtr);
+            LpStrt();
+            Goto(inequatorInequalityPtr);
+            Incrt();
+            Incrt();
+            Goto(_duplicatorPtr);
+            Decrt();
+            LpStp();                      // В I записали удвоенную разницу
+
+
+            Goto(inequatorInequalityPtr);
+            LpStrt();
+            Clear(inequatorInequalityPtr);
+
+            Goto(inequatorHelperPtr);           // Перешли на Н
+            Incrt();                    // Увеличили 
+
+            Goto(inequatorInequalityPtr);
+            LpStp();                    // Увеличили и вышли из цикла I
+
+
+            Goto(inequatorHelperPtr);           // Перешли на Н
+            Decrt();
+            LpStrt();
+            Clear(inequatorHelperPtr);
+            Clear(inequatorInequalityPtr);
+            Goto(inequatorGeneralSecond);
+            Decrt();
+            Clear(inequatorValuePtr);
+            Incrt();
+            Goto(inequatorHelperPtr);
+            LpStp();
+
+            Goto(inequatorValuePtr);
+            Decrt();
+            LpStp();
+            Clear(inequatorThresholdPtr);
+            LpStp();
+            Clear(inequatorValuePtr);
+
+            Move(inequatorGeneralSecond, inequatorGeneralFirst, '+', false);
 
             // Если сумма == 1, то это false, если 2, то норм
             Goto(_generalPtr);
             Decrt();
             CreateConditionalBlocks(
-                _generalPtr, 
-                _generalPtr + 1,
+                inequatorGeneralFirst,
+                inequatorGeneralSecond,
                 tuple.Item1,
                 tuple.Item2);
+            _ifsInRow--;
         }
+
 
         private Tuple<AstNode, AstNode, string> ProcessTerm(AstNode node)
         {
