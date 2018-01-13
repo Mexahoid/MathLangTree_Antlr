@@ -93,7 +93,7 @@ namespace BrainfuckTranspiler
             _code.Append(',');
         }
 
-        private void ProcessCondEquality(AstNode node)
+        private void ProcessConditions(AstNode node)
         {
             var tuple = ProcessTerm(node);
 
@@ -118,19 +118,6 @@ namespace BrainfuckTranspiler
 
         private void ProcessConditionalEquality(Tuple<AstNode, AstNode, string> tuple)
         {
-            //string op = node.GetChild(0).Text;
-            //switch (op)
-            //{
-            //    case ">":
-            //    case "<":
-            //        ProcessStrictInequality(node);
-            //        return;
-            //    case ">=":
-            //    case "<=":
-            //        ProcessUnstrictInequality(node);
-            //        return;
-            //}
-            //var tuple = ProcessTerm(node);
             int equatorFalsePtr = Size - _ifsInRow * 2;
             int equatorTruePtr = equatorFalsePtr + 1;
 
@@ -160,17 +147,17 @@ namespace BrainfuckTranspiler
 
         private void ProcessStrictInequality(Tuple<AstNode, AstNode, string> tuple, bool signChanged = false)
         {
-            //var tuple = ProcessTerm(node);
-
             int inequatorThresholdPtr = Size - _ifsInRow * 6;
             int inequatorValuePtr = inequatorThresholdPtr + 1;
             int inequatorInequalityPtr = inequatorValuePtr + 1;
             int inequatorHelperPtr = inequatorInequalityPtr + 1;
             int inequatorGeneralFirst = inequatorHelperPtr + 1;
             int inequatorGeneralSecond = inequatorGeneralFirst + 1;
-
-            GetFromCollector(inequatorValuePtr);
-            GetFromCollector(inequatorThresholdPtr);
+            if (!signChanged)
+            {
+                GetFromCollector(inequatorValuePtr);
+                GetFromCollector(inequatorThresholdPtr);
+            }
             if (signChanged)
             {
                 Goto(inequatorThresholdPtr);
@@ -250,10 +237,12 @@ namespace BrainfuckTranspiler
 
         private void ProcessUnstrictInequality(Tuple<AstNode, AstNode, string> tuple)
         {
-            //var tuple = ProcessTerm(node);
-            
-            GetFromCollector(_generalPtr);  // Сначала затолкано Value
-            GetFromCollector(_generalPtr);  // Потом вытягивает Threshold
+            int inequatorThresholdPtr = Size - _ifsInRow * 6;
+            int inequatorValuePtr = inequatorThresholdPtr + 1;
+            GetFromCollector(inequatorValuePtr);
+            GetFromCollector(inequatorThresholdPtr);
+
+            Copy(inequatorThresholdPtr, _generalPtr);
             Goto(_generalPtr);
             Incrt();                        // Увеличили на 1
 
@@ -279,7 +268,7 @@ namespace BrainfuckTranspiler
 
             LpStrt();
             InsertBlock(tuple.Item1);
-            Mvrght();
+            Goto(_generalPtr + 1);
             Incrt();    // Увеличили G2
             Clear(_generalPtr);
             LpStp();
