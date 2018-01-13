@@ -108,11 +108,8 @@ namespace BrainfuckTranspiler
 
             Move(_summatorPtr, equatorFalsePtr, '+');   // Перенесли в эквотер
             Goto(equatorFalsePtr);
-            string symbol = "+";
-            if (tuple.Item3 == ">")
-                symbol = "++";
-            _code.Append("[>+" + symbol + "<-]>[<+>-]<");
-            _code.Append(symbol + "[-[");
+            _code.Append("[>++<-]>[<+>-]<");
+            _code.Append("+[-[");
 
             InsertBlock(tuple.Item2);
 
@@ -134,14 +131,23 @@ namespace BrainfuckTranspiler
         private void ProcessInequality(AstNode node)
         {
             AstNode condNode = node.GetChild(0);
-            //var tuple = ProcessTerm(node);
+            var tuple = ProcessTerm(node);
 
             
-            Copy(_varTable[condNode.GetChild(0).Text], _thresholdPtr);
-            Copy(_varTable[condNode.GetChild(1).Text], _valuePtr);
-            
+            GetFromCollector(_valuePtr);
+            GetFromCollector(_thresholdPtr);
+
+            Goto(_generalPtr + 1);
+            Incrt();
+
+            Goto(_thresholdPtr);
+            LpStrt();
+
+            Goto(_generalPtr);
+            Incrt();
+
             Goto(_valuePtr);
-            _code.Append('[');
+            LpStrt();
 
             Copy(_thresholdPtr, _accumulatorPtr);
             Copy(_valuePtr, _basePtr);
@@ -150,46 +156,55 @@ namespace BrainfuckTranspiler
 
             Move(_summatorPtr, _duplicatorPtr, '+');    // Перенесли разницу в D
             Goto(_duplicatorPtr);
-            _code.Append("[");
+            LpStrt();
             Goto(_inequalityPtr);
-            _code.Append("++");
+            Incrt();
+            Incrt();
             Goto(_duplicatorPtr);
-            _code.Append("-]");                         // В I записали удвоенную разницу
+            Decrt();
+            LpStp();                      // В I записали удвоенную разницу
 
 
             Goto(_inequalityPtr);
-            _code.Append('[');
+            LpStrt();
             Clear(_inequalityPtr);
 
             Goto(_helperPtr);           // Перешли на Н
-            _code.Append('+');          // Увеличили 
-            
+            Incrt();                    // Увеличили 
+
             Goto(_inequalityPtr);
-            _code.Append(']');          // Увеличили и вышли из цикла I
+            LpStp();                    // Увеличили и вышли из цикла I
 
 
             Goto(_helperPtr);           // Перешли на Н
-            _code.Append("-[");         // Уменьшили и пытаемся начать цикл
+            Decrt();
+            LpStrt();
             Clear(_helperPtr);
             Clear(_inequalityPtr);
-            Goto(_markPtr);
-            _code.Append('+');
+            Goto(_generalPtr + 1);
+            Decrt();
             Clear(_valuePtr);
-            _code.Append('+');
-            Clear(_thresholdPtr);
+            Incrt();
             Goto(_helperPtr);
-            _code.Append(']');
-            
-            Goto(_valuePtr);
-            _code.Append("-]");          
+            LpStp();
 
-            //
-            Goto(_markPtr);
-            for (int i = 0; i < 65; i++)
-            {
-                _code.Append('+');
-            }
-            _code.Append('.');
+            Goto(_valuePtr);
+            Decrt();
+            LpStp();
+            Clear(_thresholdPtr);
+            LpStp();
+            Clear(_valuePtr);
+
+            Move(_generalPtr + 1, _generalPtr, '+', false);
+
+            // Если сумма == 1, то это false, если 2, то норм
+            Goto(_generalPtr);
+            Decrt();
+            CreateConditionalBlocks(
+                _generalPtr, 
+                _generalPtr + 1,
+                tuple.Item1,
+                tuple.Item2);
         }
 
         private Tuple<AstNode, AstNode, string> ProcessTerm(AstNode node)

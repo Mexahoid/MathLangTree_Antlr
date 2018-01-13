@@ -41,7 +41,7 @@ namespace BrainfuckTranspiler
         }
 
         /// <summary>
-        /// Переносим значение из регистра D в нужную ячейку.
+        /// Переносим значение из регистра from в регистр to.
         /// </summary>
         /// <param name="from">Откуда переносим.</param>
         /// <param name="to">Куда переносим.</param>
@@ -77,40 +77,71 @@ namespace BrainfuckTranspiler
             _code.Append("-]");
         }
 
+        private void Incrt()
+        {
+            _code.Append('+');
+        }
+
+        private void Decrt()
+        {
+            _code.Append('-');
+        }
+
+        private void LpStrt()
+        {
+            _code.Append('[');
+        }
+        private void LpStp()
+        {
+            _code.Append(']');
+        }
+
+        private void Prnt()
+        {
+            _code.Append('.');
+        }
+
+        private void Inpt()
+        {
+            _code.Append(',');
+        }
+
+        private void Mvrght()
+        {
+            _innerPtr++;
+            _code.Append('>');
+        }
+
+        private void Mvlft()
+        {
+            _innerPtr--;
+            _code.Append('<');
+        }
+
         /// <summary>
         /// Переводит указатель на выбранную позицию.
         /// </summary>
         /// <param name="pos">Позиция перевода.</param>
         private void Goto(int pos)
         {
-            void Increment()
-            {
-                _innerPtr++;
-                _code.Append('>');
-            }
-
-            void Decrement()
-            {
-                _innerPtr--;
-                _code.Append('<');
-            }
+            
             if (pos == Size)
                 throw new Exception("Ошибка параметра в Goto");
 
             if (pos < 15000 && _innerPtr < 15000 || pos >= 15000 && _innerPtr >= 15000)
             {
                 while (_innerPtr < pos)
-                    Increment();
+                    Mvrght();
 
                 while (_innerPtr > pos)
-                    Decrement();
+                    Mvlft();
 
             }
             else if (_innerPtr < 15000 && pos >= 15000)
             {
                 while (_innerPtr != pos)
                 {
-                    Decrement();
+                    Mvlft();
                     // Если -1, то ставим в 29999
                     if (_innerPtr < 0)
                         _innerPtr = Size + _innerPtr;
@@ -120,7 +151,7 @@ namespace BrainfuckTranspiler
             {
                 while (_innerPtr != pos)
                 {
-                    Increment();
+                    Mvrght();
                     // Если 30000, то ставим в 0
                     if (_innerPtr > 29999)
                         _innerPtr = 0;
@@ -182,5 +213,29 @@ namespace BrainfuckTranspiler
             GetFromCollector(where);
         }
 
+
+        private void CreateConditionalBlocks(int startPtr, int stopPtr, AstNode first, AstNode second)
+        {
+            Goto(startPtr);
+
+            LpStrt();
+
+            InsertBlock(first);
+
+            Goto(stopPtr);
+            Incrt();
+            Clear(startPtr);
+            LpStp();
+            //
+            Goto(stopPtr);
+            Decrt();
+            //
+            LpStrt();
+
+            InsertBlock(second);
+            
+            Clear(stopPtr);
+            LpStp();
+        }
     }
 }
