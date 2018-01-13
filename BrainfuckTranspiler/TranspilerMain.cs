@@ -118,7 +118,7 @@ namespace BrainfuckTranspiler
                     break;
                 case "if":
                     _ifsInRow++;
-                    ProcessConditionalEquality(node);
+                    ProcessCondEquality(node);
                     break;
             }
         }

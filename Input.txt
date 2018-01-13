@@ -7,7 +7,8 @@ if(A + 1 > D)
 {
 	print(B);
 	print(B);
-	if(C < D)
+
+	if(C <= D)
 	{
 		print(D);
 		print(D);

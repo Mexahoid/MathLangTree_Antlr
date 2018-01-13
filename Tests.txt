@@ -43,3 +43,9 @@ else
 	print(C);
 	print(A);
 }
+
+	if(C <= D)
+	{
+		print(D);
+		print(D);
+	}

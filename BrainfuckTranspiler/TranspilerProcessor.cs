@@ -93,15 +93,44 @@ namespace BrainfuckTranspiler
             _code.Append(',');
         }
 
-        private void ProcessConditionalEquality(AstNode node)
+        private void ProcessCondEquality(AstNode node)
         {
-            string op = node.GetChild(0).Text;
-            if (op == ">" || op == ">=" || op == "<" || op == "<=")
-            {
-                ProcessStrictInequality(node);
-                return;
-            }
             var tuple = ProcessTerm(node);
+
+            switch (tuple.Item3)
+            {
+                case ">":
+                case "<":
+                    ProcessStrictInequality(tuple);
+                    return;
+                case ">=":
+                case "<=":
+                    ProcessUnstrictInequality(tuple);
+                    return;
+                case "==":
+                case "<>":
+                    ProcessConditionalEquality(tuple);
+                    return;
+            }
+
+        }
+
+
+        private void ProcessConditionalEquality(Tuple<AstNode, AstNode, string> tuple)
+        {
+            //string op = node.GetChild(0).Text;
+            //switch (op)
+            //{
+            //    case ">":
+            //    case "<":
+            //        ProcessStrictInequality(node);
+            //        return;
+            //    case ">=":
+            //    case "<=":
+            //        ProcessUnstrictInequality(node);
+            //        return;
+            //}
+            //var tuple = ProcessTerm(node);
             int equatorFalsePtr = Size - _ifsInRow * 2;
             int equatorTruePtr = equatorFalsePtr + 1;
 
@@ -129,10 +158,9 @@ namespace BrainfuckTranspiler
         }
 
 
-        private void ProcessStrictInequality(AstNode node)
+        private void ProcessStrictInequality(Tuple<AstNode, AstNode, string> tuple, bool signChanged = false)
         {
-            AstNode condNode = node.GetChild(0);
-            var tuple = ProcessTerm(node);
+            //var tuple = ProcessTerm(node);
 
             int inequatorThresholdPtr = Size - _ifsInRow * 6;
             int inequatorValuePtr = inequatorThresholdPtr + 1;
@@ -143,6 +171,11 @@ namespace BrainfuckTranspiler
 
             GetFromCollector(inequatorValuePtr);
             GetFromCollector(inequatorThresholdPtr);
+            if (signChanged)
+            {
+                Goto(inequatorThresholdPtr);
+                Incrt();
+            }
 
             Goto(inequatorGeneralSecond);
             Incrt();
@@ -215,90 +248,52 @@ namespace BrainfuckTranspiler
             _ifsInRow--;
         }
 
-        private void ProcessUnstrictInequality(AstNode node)
+        private void ProcessUnstrictInequality(Tuple<AstNode, AstNode, string> tuple)
         {
-
-            AstNode condNode = node.GetChild(0);
-            var tuple = ProcessTerm(node);
-
-            int inequatorThresholdPtr = Size - _ifsInRow * 6;
-            int inequatorValuePtr = inequatorThresholdPtr + 1;
-            int inequatorInequalityPtr = inequatorValuePtr + 1;
-            int inequatorHelperPtr = inequatorInequalityPtr + 1;
-            int inequatorGeneralFirst = inequatorHelperPtr + 1;
-            int inequatorGeneralSecond = inequatorGeneralFirst + 1;
-
-            GetFromCollector(inequatorValuePtr);
-            GetFromCollector(inequatorThresholdPtr);
-
-            Goto(inequatorGeneralSecond);
-            Incrt();
-
-            Goto(inequatorThresholdPtr);
-            LpStrt();
-
-            Goto(inequatorGeneralFirst);
-            Incrt();
-
-            Goto(inequatorValuePtr);
-            LpStrt();
-
-            Copy(inequatorThresholdPtr, _accumulatorPtr);
-            Copy(inequatorValuePtr, _basePtr);
-
-            Sum('-');
-
-            Move(_summatorPtr, _duplicatorPtr, '+');    // Перенесли разницу в D
-            Goto(_duplicatorPtr);
-            LpStrt();
-            Goto(inequatorInequalityPtr);
-            Incrt();
-            Incrt();
-            Goto(_duplicatorPtr);
-            Decrt();
-            LpStp();                      // В I записали удвоенную разницу
-
-
-            Goto(inequatorInequalityPtr);
-            LpStrt();
-            Clear(inequatorInequalityPtr);
-
-            Goto(inequatorHelperPtr);           // Перешли на Н
-            Incrt();                    // Увеличили 
-
-            Goto(inequatorInequalityPtr);
-            LpStp();                    // Увеличили и вышли из цикла I
-
-
-            Goto(inequatorHelperPtr);           // Перешли на Н
-            Decrt();
-            LpStrt();
-            Clear(inequatorHelperPtr);
-            Clear(inequatorInequalityPtr);
-            Goto(inequatorGeneralSecond);
-            Decrt();
-            Clear(inequatorValuePtr);
-            Incrt();
-            Goto(inequatorHelperPtr);
-            LpStp();
-
-            Goto(inequatorValuePtr);
-            Decrt();
-            LpStp();
-            Clear(inequatorThresholdPtr);
-            LpStp();
-            Clear(inequatorValuePtr);
-
-            Move(inequatorGeneralSecond, inequatorGeneralFirst, '+', false);
-
-            // Если сумма == 1, то это false, если 2, то норм
+            //var tuple = ProcessTerm(node);
+            
+            GetFromCollector(_generalPtr);  // Сначала затолкано Value
+            GetFromCollector(_generalPtr);  // Потом вытягивает Threshold
             Goto(_generalPtr);
-            Decrt();
-            CreateConditionalBlocks(
-                inequatorGeneralFirst,
-                inequatorGeneralSecond,
-                tuple.Item1,
-                tuple.Item2);
+            Incrt();                        // Увеличили на 1
+
+            LpStrt();   // Если там не 0, то заходим сюда
+            Mvrght();
+            Incrt();    // Увеличили G2
+            Clear(_generalPtr);
+            LpStp();
+
+            Goto(_generalPtr + 1);
+            Decrt();    // Если на прошлом шаге не записали 1, то будет 255
+
+            LpStrt();   
+            Mvlft();
+            Incrt();    // Увеличили G1
+            Clear(_generalPtr + 1);
+            LpStp();
+            // G1  G2
+            // 0   0   T != 255
+            // 1   0   T == 255
+
+            Goto(_generalPtr);
+
+            LpStrt();
+            InsertBlock(tuple.Item1);
+            Mvrght();
+            Incrt();    // Увеличили G2
+            Clear(_generalPtr);
+            LpStp();
+
+            Goto(_generalPtr + 1);
+            Decrt();    // Если на прошлом шаге не записали 1, то будет 255
+
+            LpStrt();
+
+            ProcessStrictInequality(tuple, true);
+
+            Clear(_generalPtr);
+            Clear(_generalPtr + 1);
+            LpStp();
             _ifsInRow--;
         }
 
