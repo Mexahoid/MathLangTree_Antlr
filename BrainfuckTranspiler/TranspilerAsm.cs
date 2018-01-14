@@ -214,12 +214,17 @@ namespace BrainfuckTranspiler
         }
 
 
-        private void CreateConditionalBlocks(int startPtr, int stopPtr, AstNode first, AstNode second)
+        private void CreateConditionalBlocks(
+            int startPtr, 
+            int stopPtr, 
+            AstNode first, 
+            AstNode second,
+            Tuple<Action, Action> modifier)
         {
             Goto(startPtr);
 
             LpStrt();
-
+            modifier?.Item1?.Invoke();
             InsertBlock(first);
 
             Goto(stopPtr);
@@ -232,6 +237,7 @@ namespace BrainfuckTranspiler
             //
             LpStrt();
 
+            modifier?.Item2?.Invoke();
             InsertBlock(second);
             
             Clear(stopPtr);

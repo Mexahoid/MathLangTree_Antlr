@@ -24,7 +24,7 @@ namespace BrainfuckTranspiler
         /// </summary>
         private int _varPtr;
 
-        // |v|a|r|s|D|S|A|B|G1|G2|C1|C2|..|CN|<...>|IT|IV|II|IH|IG1|IG2|EF2|ET2|EF1|ET1|EF0|ET0|
+        // |v|a|r|s|D|S|A|B|G1|G2|C1|C2|..|CN|<...>|L1|IT|IV|II|IH|IG1|IG2|EF2|ET2|EF1|ET1|EF0|ET0|
         // D - Duplicator
         // S - Summator/Substractor
         // A - Accumulator
@@ -38,6 +38,7 @@ namespace BrainfuckTranspiler
         // II - Inequality
         // IH - Helper
         // IG1, IG2 - General purpose
+        // LN - Loop
 
         private int _innerPtr;
         /// <summary>
@@ -49,6 +50,8 @@ namespace BrainfuckTranspiler
         private int _basePtr;
         private int _generalPtr;
         private int _collectorPtr;
+        private int _loopPtr;
+        private int _loopsInRow;
         private int _ifsInRow;
 
         public Transpiler(AstNode node)
@@ -58,7 +61,7 @@ namespace BrainfuckTranspiler
             _reserved = new List<string>
             {
                 "BLOCK", "=", "input", "print", "-", "+", "*", "/", "==", "<>", "if",
-                ">", "<", ">=", "<="
+                ">", "<", ">=", "<=", "while", "for"
             };
             _code = new StringBuilder();
             _operationsQueue = new Queue<AstNode>();
@@ -67,16 +70,20 @@ namespace BrainfuckTranspiler
 
         public string Transpile()
         {
+            int offset = 0;
             for (int i = 0; i < _blockNode.ChildCount; i++)
-                FindVars(_blockNode.GetChild(i));
+            {
+                Analyze(_blockNode.GetChild(i), ref offset);
+            }
+
             _summatorPtr = _duplicatorPtr + 1;      // S после D
             _accumulatorPtr = _summatorPtr + 1;     // A после S
             _basePtr = _accumulatorPtr + 1;         // И т.д., пока губы как у старой
             _generalPtr = _basePtr + 1;             // бабки не втянутся чтоб пиздец        
             _collectorPtr = _generalPtr + 2;        // и помереть нахуй
-
+            _loopPtr = Size - offset;
             _ifsInRow = 0;
-            
+
 
             //На этом моменте сформирована таблица переменных изначальных
             for (int i = 0; i < _blockNode.ChildCount; i++)
@@ -85,12 +92,30 @@ namespace BrainfuckTranspiler
             return _code.ToString();
         }
 
-        private void FindVars(AstNode node)
+        private void Analyze(AstNode node, ref int offset)
         {
             if (_reserved.Contains(node.Text))
             {
+                if (node.Text == "if" || node.Text == "while" || node.Text == "for")
+                {
+                    string op = node.GetChild(0).Text;
+                    switch (op)
+                    {
+                        case ">":
+                        case "<":
+                        case ">=":
+                        case "<=":
+                            offset += 6;
+                            break;
+                        case "==":
+                        case "<>":
+                            offset += 2;
+                            break;
+                    }
+                }
+
                 for (int i = 0; i < node.ChildCount; i++)
-                    FindVars(node.GetChild(i));
+                    Analyze(node.GetChild(i), ref offset);
                 return;
             }
             if (int.TryParse(node.Text, out int value))
@@ -119,6 +144,12 @@ namespace BrainfuckTranspiler
                 case "if":
                     _ifsInRow++;
                     ProcessConditions(node);
+                    break;
+                case "while":
+                case "for":
+                    _loopsInRow++;
+                    _ifsInRow++;
+                    ProcessLoop(node);
                     break;
             }
         }

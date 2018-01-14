@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
-
 using AstNode = Antlr.Runtime.Tree.ITree;
 
 namespace BrainfuckTranspiler
@@ -81,7 +81,7 @@ namespace BrainfuckTranspiler
                 return;
             AstNode var = node.GetChild(0);
             Goto(_varTable[var.Text]);
-            _code.Append('.');
+            Prnt();
         }
 
         private void ProcessInput(AstNode node)
@@ -90,7 +90,7 @@ namespace BrainfuckTranspiler
                 return;
             AstNode var = node.GetChild(0);
             Goto(_varTable[var.Text]);
-            _code.Append(',');
+            Inpt();
         }
 
         private void ProcessConditions(AstNode node)
@@ -145,7 +145,10 @@ namespace BrainfuckTranspiler
         }
 
 
-        private void ProcessStrictInequality(Tuple<AstNode, AstNode, string> tuple, bool signChanged = false)
+        private void ProcessStrictInequality(
+            Tuple<AstNode, AstNode, string> tuple, 
+            bool signChanged = false,
+            Tuple<Action, Action> Modifier = null)
         {
             int inequatorThresholdPtr = Size - _ifsInRow * 6;
             int inequatorValuePtr = inequatorThresholdPtr + 1;
@@ -231,11 +234,13 @@ namespace BrainfuckTranspiler
                 inequatorGeneralFirst,
                 inequatorGeneralSecond,
                 tuple.Item1,
-                tuple.Item2);
+                tuple.Item2,
+                Modifier);
             _ifsInRow--;
         }
 
-        private void ProcessUnstrictInequality(Tuple<AstNode, AstNode, string> tuple)
+        private void ProcessUnstrictInequality(Tuple<AstNode, AstNode, string> tuple, 
+            Tuple<Action, Action> Modifier = null)
         {
             int inequatorThresholdPtr = Size - _ifsInRow * 6;
             int inequatorValuePtr = inequatorThresholdPtr + 1;
@@ -267,6 +272,8 @@ namespace BrainfuckTranspiler
             Goto(_generalPtr);
 
             LpStrt();
+
+            Modifier?.Item1?.Invoke();
             InsertBlock(tuple.Item1);
             Goto(_generalPtr + 1);
             Incrt();    // Увеличили G2
@@ -278,13 +285,115 @@ namespace BrainfuckTranspiler
 
             LpStrt();
 
-            ProcessStrictInequality(tuple, true);
+            ProcessStrictInequality(tuple, true, Modifier);
 
             Clear(_generalPtr);
             Clear(_generalPtr + 1);
             LpStp();
             _ifsInRow--;
         }
+
+        private void ProcessLoop(AstNode node)
+        {
+            string op = node.Text;
+            if (op == "for")
+            {
+
+            }
+            else
+            {
+                int mainPtr = _loopPtr - _loopsInRow;
+
+                var tuple = ProcessTerm(node);
+                switch (tuple.Item3)
+                {
+                    case ">":
+                    case "<":
+                        ProcessStrictInequality(new 
+                            Tuple<AstNode, AstNode, string>(
+                            null, null, tuple.Item3),
+                            false
+                            ,
+                            tuple.Item3 == node.GetChild(0).Text ?
+                            new Tuple<Action, Action>(ModifTrue, ModifFalse):
+                            new Tuple<Action, Action>(ModifFalse, ModifTrue));
+                        _ifsInRow++;
+                        break;
+                    case ">=":
+                    case "<=":
+                        ProcessUnstrictInequality(new
+                                Tuple<AstNode, AstNode, string>(
+                                    null, null, tuple.Item3),
+                            tuple.Item3 == node.GetChild(0).Text ?
+                                new Tuple<Action, Action>(ModifTrue, ModifFalse) :
+                                new Tuple<Action, Action>(ModifFalse, ModifTrue));
+                        _ifsInRow += 2;
+                        break;
+                    case "==":
+                    case "<>":
+                        break;
+                }
+
+                void ModifTrue()
+                {
+                    Goto(_duplicatorPtr);
+                    Incrt();
+                    LpStrt();
+                    Goto(mainPtr);
+                    Incrt();
+                    Incrt();
+                    Goto(_duplicatorPtr);
+                    Decrt();
+                    LpStp();
+                    Goto(mainPtr);
+                }
+
+                void ModifFalse()
+                {
+                    Clear(mainPtr);
+                }
+
+                Goto(mainPtr);
+                LpStrt();
+
+                InsertBlock(tuple.Item3 == node.GetChild(0).Text ? tuple.Item1 : tuple.Item2);
+
+                tuple = ProcessTerm(node);
+                switch (tuple.Item3)
+                {
+                    case ">":
+                    case "<":
+                        ProcessStrictInequality(new
+                                Tuple<AstNode, AstNode, string>(
+                                    null, null, tuple.Item3), false,
+                            tuple.Item3 == node.GetChild(0).Text ?
+                                new Tuple<Action, Action>(ModifTrue, ModifFalse) :
+                                new Tuple<Action, Action>(ModifFalse, ModifTrue));
+                        _ifsInRow++;
+                        break;
+                    case ">=":
+                    case "<=":
+                        ProcessUnstrictInequality(new
+                                Tuple<AstNode, AstNode, string>(
+                                    null, null, tuple.Item3),
+                            tuple.Item3 == node.GetChild(0).Text ?
+                                new Tuple<Action, Action>(ModifTrue, ModifFalse) :
+                                new Tuple<Action, Action>(ModifFalse, ModifTrue));
+                        _ifsInRow += 2;
+                        break;
+                    case "==":
+                    case "<>":
+                        break;
+                }
+
+
+                Goto(mainPtr);
+                LpStp();
+                _ifsInRow--;
+                _loopsInRow--;
+            }
+        }
+
 
 
         private Tuple<AstNode, AstNode, string> ProcessTerm(AstNode node)
@@ -334,7 +443,7 @@ namespace BrainfuckTranspiler
                     return null;
             }
         }
-
+        
         private Tuple<AstNode, AstNode, string> CurryIf(AstNode node)
         {
             AstNode left = node.GetChild(1);

@@ -3,13 +3,10 @@ B = 66;
 C = 67;
 D = 68;
 
-if(A <= D)
+
+while(B < C)
 {
+	print(A);
+	B = B + 1;
 	print(B);
-	print(B);
-}
-else
-{
-	print(C);
-	print(C);
 }

@@ -2,50 +2,54 @@
 B = 66;
 C = 67;
 D = 68;
+E = 69;
+F = 70;
+G = 71;
+H = 72;
 
+if(A <= D)
+{
+	print(E);
+	print(E);
+}
+else
+{
+	print(F);
+	print(F);
+}
+
+
+for(I = 0; I < 10; I = I + 1)
+{
+    D = I + 65;
+	print(D);
+}
 if(B + 2 <> D - 2)
 {
-	print(A);
-	print(D);
+	print(G);
+	print(G);
 }
 else if(A == D)
 {
-	print(C);
-	print(A);
+	print(G);
+	print(H);
 
 	if(C == D)
 	{
-		print(A);
-		print(A);
+		print(H);
+		print(E);
 	}
 }
 else
 {
-	print(B);
-	print(A);
-}
-
-
-
-
-A = 65; 
-B = 66;
-C = 67;
-D = 68;
-
-if(A == D)
-{
-	print(A);
-	print(D);
-}
-else
-{
-	print(C);
-	print(A);
-}
-
-	if(C <= D)
+	print(H);
+	print(F);
+	if( A >= D)
 	{
-		print(D);
-		print(D);
+		print(H);
+		print(E);
+		print(H);
+		print(E);
+
 	}
+}
