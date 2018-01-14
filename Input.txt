@@ -2,11 +2,62 @@ A = 65;
 B = 66;
 C = 67;
 D = 68;
+E = 69;
+F = 70;
+G = 71;
+H = 72;
+
+if(A <= D)
+{
+	print(E);
+	print(E);
+}
+else
+{
+	print(F);
+	print(F);
+}
 
 
-while(B < C)
+for(I = 0; I < 10; I = I + 1)
+{
+    D = I + 65;
+	print(D);
+}
+
+if(B + 2 <> D - 2)
+{
+	print(G);
+	print(G);
+}
+else if(A == D)
+{
+	print(G);
+	print(H);
+
+	if(C == D)
+	{
+		print(H);
+		print(E);
+	}
+}
+else
+{
+	print(H);
+	print(F);
+	if( A >= D)
+	{
+		print(H);
+		print(E);
+		print(H);
+		print(E);
+
+	}
+}
+Z = 10;
+while(A < 250)
 {
 	print(A);
-	B = B + 1;
-	print(B);
+	print(Z);
+	A = A -1;
 }

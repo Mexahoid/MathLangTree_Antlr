@@ -224,8 +224,8 @@ namespace BrainfuckTranspiler
             Goto(startPtr);
 
             LpStrt();
-            modifier?.Item1?.Invoke();
             InsertBlock(first);
+            modifier?.Item1?.Invoke();
 
             Goto(stopPtr);
             Incrt();
@@ -237,8 +237,8 @@ namespace BrainfuckTranspiler
             //
             LpStrt();
 
-            modifier?.Item2?.Invoke();
             InsertBlock(second);
+            modifier?.Item2?.Invoke();
             
             Clear(stopPtr);
             LpStp();

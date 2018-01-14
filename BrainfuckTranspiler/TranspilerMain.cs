@@ -88,7 +88,7 @@ namespace BrainfuckTranspiler
             //На этом моменте сформирована таблица переменных изначальных
             for (int i = 0; i < _blockNode.ChildCount; i++)
                 ParseOperation(_blockNode.GetChild(i));
-
+            _code.Append($"\n {_code.Length}");
             return _code.ToString();
         }
 
@@ -98,7 +98,8 @@ namespace BrainfuckTranspiler
             {
                 if (node.Text == "if" || node.Text == "while" || node.Text == "for")
                 {
-                    string op = node.GetChild(0).Text;
+                    string op = node.Text == "for" ?
+                        node.GetChild(1).Text : node.GetChild(0).Text;
                     switch (op)
                     {
                         case ">":

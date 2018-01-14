@@ -24,6 +24,7 @@ for(I = 0; I < 10; I = I + 1)
     D = I + 65;
 	print(D);
 }
+
 if(B + 2 <> D - 2)
 {
 	print(G);
@@ -52,4 +53,11 @@ else
 		print(E);
 
 	}
+}
+Z = 10;
+while(A < 250)
+{
+	print(A);
+	print(Z);
+	A = A -1;
 }
